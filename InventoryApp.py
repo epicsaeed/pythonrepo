@@ -3,6 +3,10 @@
 with open('inventory.txt') as f:
     inventory = list(f)
 
+#length of opened file
+l = len(inventory)
+
+
 #variables
 productID=[]
 name=[]
@@ -12,12 +16,13 @@ inStock=[]
 
 #this function reads opened file and assigns each row to its appropriate value in the lists above.
 def setList():  
+    
     #variables
     s = []
     counter = 2
     #reads inventory list line by line
     while counter < len(inventory):
-        #splits each line by tabs and save in a temp list
+        #splits each line by tabs and save in a temp list (s)
         for word in inventory[counter].split("\t"):
             s.append(word)
         #removes \n from last element
@@ -38,20 +43,32 @@ def setList():
         color.append(s[3])
         inStock.append(s[4])
         counter+=1
-        print(s)    #for testing
+        #print(s)    #for testing
         #clears temp list
         s.clear()
     print("Inventory has been updated!")
 
+#takes users to options function
+def mainList():
+    x = input("press return to go to main list")
+    if x == "":
+        options()
 
+#shows the list of products
 def viewList():
     counter = 0
-    print("ProductID       Name        Size        Color       inStock")
-    print("============================================================")
-    while counter < len(inventory)-1:
-        print(productID[counter],"      ",name[counter],"      ",size[counter],"      ",color[counter],"      ",inStock[counter])
+
+    #excludes the labels from inventory length
+    r = l-2
+    
+    print("No.     ProductID       Name        Size        Color       inStock")
+    print("===================================================================")
+
+    while counter < r:
+        print(counter+1,".      ",productID[counter],"      ",name[counter],"      ",size[counter],"      ",color[counter],"      ",inStock[counter])
         counter+=1
 
+#checks if a passed parameter is an integer
 def isValid(s): 
     try:
         int(s)
@@ -59,18 +76,89 @@ def isValid(s):
     except ValueError:
         return False
 
-
+#function to add items to the list
 def addItem():
-    print(1)
+    x = input("Please enter the product ID: ")
+    
+    notValid = True
+    while notValid:
+        if len(x) != 7:
+            x = input("product ID must be 7 digits: ")
+        else:
+            productID.append(x)
+            notValid = False
 
+    n = input("Please enter the name of the product: ")
+    if n == "":
+        name.append("N/A")
+    else:
+        name.append(n)
+
+    s = input("Please enter the size of the item: ")
+    if s == "":
+        size.append("N/A")
+    else:
+        size.append(s)
+
+    c = input("Please enter the color of the product: ")
+    if c == "":
+        color.append("N/A")
+    else:
+        color.append(c)
+
+    iS = input("How many of this item is in stock?: ")
+    notValid = True
+    while notValid:
+        if isValid(iS):
+            inStock.append(iS)
+            notValid = False
+        else:
+            print("Please enter a number: ")
+            iS = input()
+    print("Item has been added.")
+
+    #updates new list size
+    mainList()
+
+#function to delete items from the list
 def delItem():
-    print(0)
+    viewList()
+    x = input("Please enter the number of item you would like to delete: ")
+    
+    notZero = True
+    while notZero:
+        if x==0:
+            print("0 is not a valid input. Please enter a valid number: ")
+        else:
+            notZero = False
 
+    notValid = True
+    while notValid:
+        if isValid(x):
+            notValid = False
+            x = int(x)
+            x-=1 
+            del productID[x]
+            del name[x]
+            del size[x]
+            del color[x]
+            del inStock[x]
+            del inventory[x]
+            print("Item No.",x+1,"has been deleted.\nPress Return to view updated list")
+            enter = input()
+            if enter == "":
+                viewList()
+        else:
+            x = input("Please enter the number of item you would like to delete: ")
+    mainList()
+
+#function that exports the updated list to .csv
 def exportList():
     print(0)
 
+#functions that shows available options
 def options():
-    option = input("Please select from the options below:\n1. View Inventory\n2.Add item\n3.Delete item\n4.Export")
+    option = input("Please select from the options below:\n1. View Inventory\n2.Add item\n3.Delete item\n4.Export: ")
     notValid = True
     while notValid:
         if isValid(option):
@@ -78,6 +166,7 @@ def options():
             notValid = False
             if option == 1:
                 viewList()
+                mainList()
             if option == 2:
                 addItem()
             if option == 3:
@@ -88,6 +177,6 @@ def options():
             print("Please choose a number from the list above ONLY: ")
             option = input()
             
-
 setList()
-#options()
+options()
+#viewList()
