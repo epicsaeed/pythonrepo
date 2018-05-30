@@ -3,29 +3,20 @@
 with open('inventory.txt') as f:
     inventory = list(f)
 
-<<<<<<< Updated upstream
 #length of opened file
 l = len(inventory)
 
 
 #variables
-=======
-#global variables
->>>>>>> Stashed changes
 productID=[]
 name=[]
 size=[]
 color=[]
 inStock=[]
 
-<<<<<<< Updated upstream
 #this function reads opened file and assigns each row to its appropriate value in the lists above.
 def setList():  
     
-=======
-#this function reads opened file and adds each row to its appropriate list in the variables above.
-def setList():  
->>>>>>> Stashed changes
     #variables
     s = []
     counter = 2
@@ -130,24 +121,35 @@ def addItem():
     #updates new list size
     mainList()
 
-#function to delete items from the list
+#function to delete items from the list 
 def delItem():
     viewList()
     x = input("Please enter the number of item you would like to delete: ")
-    
-    notZero = True
-    while notZero:
-        if x==0:
-            print("0 is not a valid input. Please enter a valid number: ")
-        else:
-            notZero = False
+    L = len(productID)
+    print("L is",L)
+    L = int(L)
+
+    #supposed to chech if input is 9 (not working)
+    # notZero = True
+    # while notZero:
+    #     if x==0:
+    #         print("0 is not a valid input. Please enter a valid number: ")
+    #     else:
+    #         notZero = False
 
     notValid = True
-    while notValid:
+    while notValid:           
         if isValid(x):
-            notValid = False
             x = int(x)
-            x-=1 
+            tooHigh = True
+            while tooHigh:
+                if int(x) > int(L):
+                    print("Please choose from the available list (0-",L,"): ")
+                    x = input()
+                else:
+                    tooHigh = False
+            notValid = False
+            x-=1
             del productID[x]
             del name[x]
             del size[x]
@@ -164,7 +166,21 @@ def delItem():
 
 #function that exports the updated list to .csv
 def exportList():
-    print(0)
+    import csv
+    exportedFile = "inventory.csv"
+    range = len(productID)
+    x = 0
+    row = []
+    with open(exportedFile, "w") as output:
+        writer = csv.writer(output, lineterminator='\n')
+        while x < range:
+            row.append(productID)
+            row.append(name)
+            row.append(size)
+            row.append(color)
+            row.append(inStock)
+            writer.writerow(row)
+            range-=1
 
 #functions that shows available options
 def options():
