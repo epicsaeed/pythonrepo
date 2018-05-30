@@ -3,20 +3,29 @@
 with open('inventory.txt') as f:
     inventory = list(f)
 
+<<<<<<< Updated upstream
 #length of opened file
 l = len(inventory)
 
 
 #variables
+=======
+#global variables
+>>>>>>> Stashed changes
 productID=[]
 name=[]
 size=[]
 color=[]
 inStock=[]
 
+<<<<<<< Updated upstream
 #this function reads opened file and assigns each row to its appropriate value in the lists above.
 def setList():  
     
+=======
+#this function reads opened file and adds each row to its appropriate list in the variables above.
+def setList():  
+>>>>>>> Stashed changes
     #variables
     s = []
     counter = 2

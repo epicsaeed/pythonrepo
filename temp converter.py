@@ -1,7 +1,5 @@
 #This app converts temperature given in Celsius to Fahrenheit.
 
-#added to pythonrepo
-
 #function that converts Celsius to Fahrenheit
 def convertToF(t):                              
     f = t * 1.8 + 32.0                       
