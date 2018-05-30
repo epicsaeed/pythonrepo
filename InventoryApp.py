@@ -59,7 +59,8 @@ def viewList():
     counter = 0
 
     #excludes the labels from inventory length
-    r = l-2
+    r = len(productID)
+    print(r)
     
     print("No.     ProductID       Name        Size        Color       inStock")
     print("===================================================================")
