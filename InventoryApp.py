@@ -154,7 +154,21 @@ def delItem():
 
 #function that exports the updated list to .csv
 def exportList():
-    print(0)
+    import csv
+    exportedFile = "inventory.csv"
+    range = len(productID)
+    x = 0
+    row = []
+    with open(exportedFile, "w") as output:
+        writer = csv.writer(output, lineterminator='\n')
+        while x < range:
+            row.append(productID)
+            row.append(name)
+            row.append(size)
+            row.append(color)
+            row.append(inStock)
+            writer.writerow(row)
+            range-=1
 
 #functions that shows available options
 def options():
