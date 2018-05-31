@@ -1,4 +1,6 @@
 
+#Inventory Management Tool
+
 #opens file and create a list of each line
 with open('inventory.txt') as f:
     inventory = list(f)
@@ -6,13 +8,13 @@ with open('inventory.txt') as f:
 #length of opened file
 l = len(inventory)
 
-
-#variables
+#global variables
 productID=[]
 name=[]
 size=[]
 color=[]
 inStock=[]
+Updated = False
 
 #this function reads opened file and assigns each row to its appropriate value in the lists above.
 def setList():  
@@ -50,8 +52,8 @@ def setList():
 
 #takes users to options function
 def mainList():
-    x = input("press return to go to main list")
-    if x == "":
+    r = input("press return to go to main list")
+    if r == "":
         options()
 
 #shows the list of products
@@ -117,6 +119,7 @@ def addItem():
             print("Please enter a number: ")
             iS = input()
     print("Item has been added.")
+    Updated = True
 
     #updates new list size
     mainList()
@@ -126,21 +129,22 @@ def delItem():
     viewList()
     x = input("Please enter the number of item you would like to delete: ")
     L = len(productID)
-    print("L is",L)
     L = int(L)
-
-    #supposed to chech if input is 9 (not working)
-    # notZero = True
-    # while notZero:
-    #     if x==0:
-    #         print("0 is not a valid input. Please enter a valid number: ")
-    #     else:
-    #         notZero = False
 
     notValid = True
     while notValid:           
         if isValid(x):
             x = int(x)
+            
+            #checks if user selected 0
+            isZero = True
+            while isZero:
+                if int(x)==0:
+                    x = input("0 is not a valid input. Please try again: ")
+                else:
+                    isZero = False
+
+            #checks if user selected a number too high from the list
             tooHigh = True
             while tooHigh:
                 if int(x) > int(L):
@@ -148,8 +152,11 @@ def delItem():
                     x = input()
                 else:
                     tooHigh = False
+
+            #deletes the selected item no.        
             notValid = False
             x-=1
+            print(type(x))
             del productID[x]
             del name[x]
             del size[x]
@@ -161,33 +168,37 @@ def delItem():
             if enter == "":
                 viewList()
         else:
-            x = input("Please enter the number of item you would like to delete: ")
+            x = input("Please enter a valid item number: ")
     mainList()
 
 #function that exports the updated list to .csv
 def exportList():
     import csv
     exportedFile = "inventory.csv"
-    range = len(productID)
-    x = 0
-    row = []
-    with open(exportedFile, "w") as output:
-        writer = csv.writer(output, lineterminator='\n')
-        while x < range:
-            row.append(productID)
-            row.append(name)
-            row.append(size)
-            row.append(color)
-            row.append(inStock)
-            writer.writerow(row)
-            range-=1
+    counter = 0
+    data = createListForExport()
+    with open(exportedFile, "w",newline = '') as output:
+        a = csv.writer(output,delimiter=',')
+        headline = [['Product ID','Name','Size','Color','Availability'],]
+        a.writerows(headline)
+        a.writerows(data)
+
+#creates a list fot exporting
+def createListForExport():
+    L = len(name)
+    count = 0
+    list = [[]]
+    while count < L:
+        list = list + [[productID[count],name[count],size[count],color[count],inStock[count]]]
+        count+=1
+    return list
 
 #functions that shows available options
 def options():
-    option = input("Please select from the options below:\n1. View Inventory\n2.Add item\n3.Delete item\n4.Export: ")
+    option = input("Please select from the options below:\n1. View Inventory\n2.Add item\n3.Delete item\n4.Export\n5.Exit: ")
     notValid = True
     while notValid:
-        if isValid(option):
+        if isValid(option) and int(option) < 6 and int(option) != 0:
             option = int(option)
             notValid = False
             if option == 1:
@@ -199,10 +210,20 @@ def options():
                 delItem()
             if option == 4:
                 exportList()
+            if option == 5:
+                exit()
         else:
             print("Please choose a number from the list above ONLY: ")
             option = input()
             
+def backup():
+
+
+
+
+
+
 setList()
+#createListForExport()
 options()
 #viewList()
