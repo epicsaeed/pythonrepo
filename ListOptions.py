@@ -102,32 +102,13 @@ def options(inventory,productID,name,size,color,inStock):
 #function to delete items from the list 
 def delItem(inventory,productID,name,size,color,inStock):
     viewList(productID,name,size,color,inStock)
-    x = input("Please enter the number of item you would like to delete: ")
-    L = len(productID)
-    L = int(L)
-
+    #L = int(L)
     notValid = True
-    while notValid:           
-        if errorCheck.isValid(x):
+    L = len(productID)
+    x = input("Please enter the number of item you would like to delete: ")       
+    while notValid:    
+        if errorCheck.isValid(x) and int(x) !=0 and int(x)<int(L):
             x = int(x)
-            
-            #checks if user selected 0
-            isZero = True
-            while isZero:
-                if int(x)==0:
-                    x = input("0 is not a valid input. Please try again: ")
-                else:
-                    isZero = False
-
-            #checks if user selected a number too high from the list
-            tooHigh = True
-            while tooHigh:
-                if int(x) > int(L):
-                    print("Please choose from the available list (0-",L,"): ")
-                    x = input()
-                else:
-                    tooHigh = False
-
             #deletes the selected item no.        
             notValid = False
             x-=1
@@ -141,7 +122,7 @@ def delItem(inventory,productID,name,size,color,inStock):
             del color[x]
             del inStock[x]
 
-            print("Item No.",x+2," has been deleted.\nPress Return to view updated list")
+            print("Item No.",x+1," has been deleted.\nPress Return to view updated list")
             enter = input()
             if enter == "":
                 viewList(productID,name,size,color,inStock) 
