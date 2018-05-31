@@ -46,6 +46,124 @@ def setList():
         s.clear()
     print("\nInventory.txt has been Imported!")
 
+<<<<<<< HEAD
+=======
+#function to add items to the list
+def addItem():
+    x = input("Please enter the product ID: ")
+    
+    notValid = True
+    while notValid:
+        if len(x) != 7:
+            x = input("product ID must be 7 digits: ")
+        else:
+            productID.append(x)
+            notValid = False
+
+    n = input("Please enter the name of the product: ")
+    if n == "":
+        name.append("N/A")
+    else:
+        name.append(n)
+
+    s = input("Please enter the size of the item: ")
+    if s == "":
+        size.append("N/A")
+    else:
+        size.append(s)
+
+    c = input("Please enter the color of the product: ")
+    if c == "":
+        color.append("N/A")
+    else:
+        color.append(c)
+
+    iS = input("How many of this item is in stock?: ")
+    notValid = True
+    while notValid:
+        if isValid(iS):
+            inStock.append(iS)
+            notValid = False
+        else:
+            print("Please enter a number: ")
+            iS = input()
+    print("Item has been added.")
+
+    #updates new list size
+    mainList()
+
+#function to delete items from the list
+def delItem():
+    viewList()
+    x = input("Please enter the number of item you would like to delete: ")
+    
+    notZero = True
+    while notZero:
+        if x==0:
+            print("0 is not a valid input. Please enter a valid number: ")
+        else:
+            notZero = False
+
+    notValid = True
+    while notValid:
+        if isValid(x):
+            notValid = False
+            x = int(x)
+            x-=1 
+            del productID[x]
+            del name[x]
+            del size[x]
+            del color[x]
+            del inStock[x]
+            del inventory[x]
+            print("Item No.",x+1,"has been deleted.\nPress Return to view updated list")
+            enter = input()
+            if enter == "":
+                viewList()
+        else:
+            x = input("Please enter the number of item you would like to delete: ")
+    mainList()
+
+#function that exports the updated list to .csv
+def exportList():
+    import csv
+    exportedFile = "inventory.csv"
+    range = len(productID)
+    x = 0
+    row = []
+    with open(exportedFile, "w") as output:
+        writer = csv.writer(output, lineterminator='\n')
+        while x < range:
+            row.append(productID)
+            row.append(name)
+            row.append(size)
+            row.append(color)
+            row.append(inStock)
+            writer.writerow(row)
+            range-=1
+
+#functions that shows available options
+def options():
+    option = input("Please select from the options below:\n1. View Inventory\n2.Add item\n3.Delete item\n4.Export: ")
+    notValid = True
+    while notValid:
+        if isValid(option):
+            option = int(option)
+            notValid = False
+            if option == 1:
+                viewList()
+                mainList()
+            if option == 2:
+                addItem()
+            if option == 3:
+                delItem()
+            if option == 4:
+                exportList()
+        else:
+            print("Please choose a number from the list above ONLY: ")
+            option = input()
+            
+>>>>>>> master
 setList()
 ListOptions.options(inventory,productID,name,size,color,inStock)
 #length of opened file
