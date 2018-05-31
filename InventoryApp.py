@@ -8,10 +8,6 @@ import ListOptions  #imports list option methods
 with open('inventory.txt','r+') as f:
     inventory = list(f)
 
-#length of opened file
-#l = len(inventory)
-
-#global variables
 productID=[]
 name=[]
 size=[]
@@ -52,3 +48,5 @@ def setList():
 
 setList()
 ListOptions.options(inventory,productID,name,size,color,inStock)
+#length of opened file
+#l = len(inventory)
