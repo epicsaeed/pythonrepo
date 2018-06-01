@@ -1,6 +1,84 @@
 
 import errorCheck
 
+#this functions checks if input file has one tab or multiple tabs and calls set list accordingly
+def checkFile(inventory,productID,name,size,color,inStock):
+    temp = []
+    for word in inventory[2].split("\t"):
+        temp.append(word)
+    if '' in temp:
+        setListMulti(inventory,productID,name,size,color,inStock)
+    else:
+        setList(inventory,productID,name,size,color,inStock)
+
+#this function reads opened file and assigns each row to its appropriate value in the lists above.(for unknown tabs)
+def setListMulti(inventory,productID,name,size,color,inStock):  
+    #variables 
+    s = []
+    counter = 2
+
+    #reads inventory list line by line
+    while counter < len(inventory) :
+        #removes all spaces from each line in inventory and saves it in a temp list 's'
+        s = list(filter(None,inventory[counter].split("\t")))
+
+        #removes \n from last element
+        s[-1] = s[-1].strip()
+
+        #if list(s) contains 4 elements only, it means that an empty name was deleted and
+        #it should be replaced with an N/A
+        if len(s) == 4:
+            name.append("N/A")
+        else:
+            productID.append(s[0])
+            name.append(s[1])
+            size.append(s[2])
+            color.append(s[3])
+            inStock.append(s[4])
+
+        #incr. counter
+        counter+=1
+
+        #clears temp list
+        s.clear()
+    print("\n\nInventory_updated.txt has been Imported!")
+    print(productID)
+
+#this function reads opened file and assigns each row to its appropriate value in the lists above.(for single tabs)
+def setList(inventory,productID,name,size,color,inStock):  
+    #variables
+    s = []
+    counter = 2
+    #reads inventory list line by line
+    while counter < len(inventory):
+        #splits each line by tabs and save in a temp list (s)
+        for word in inventory[counter].split("\t"):
+            s.append(word)
+        #removes \n from last element
+        s[-1] = s[-1].strip()
+
+        
+        #replaces empty string in s with 'N/A'
+        i = 0
+        while i < len(s):
+            if s[i]:
+                i+=1
+            else:
+                s[i] = "N/A"
+
+        #adds each row to its appropriate list
+        productID.append(s[0])
+        name.append(s[1])
+        size.append(s[2])
+        color.append(s[3])
+        inStock.append(s[4])
+        counter+=1
+
+        #clears temp list
+        print(s)
+        s.clear()
+    print("\nInventory.txt has been Imported!")
+
 #shows the list of products
 def viewList(productID,name,size,color,inStock):
     counter = 0
@@ -78,7 +156,7 @@ def backup(inventory):
 
 #functions that shows available options
 def options(inventory,productID,name,size,color,inStock):
-    option = input("Please select from the options below:\n1. View Inventory\n2.Add item\n3.Delete item\n4.Export\n5.Exit: ")
+    option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Exit: ")
     notValid = True
     while notValid:
         if errorCheck.isValid(option) and int(option) < 6 and int(option) != 0:
@@ -102,7 +180,6 @@ def options(inventory,productID,name,size,color,inStock):
 #function to delete items from the list 
 def delItem(inventory,productID,name,size,color,inStock):
     viewList(productID,name,size,color,inStock)
-    #L = int(L)
     notValid = True
     L = len(productID)
     x = input("Please enter the number of item you would like to delete: ")       
@@ -152,4 +229,3 @@ def createListForExport(productID,name,size,color,inStock):
         list = list + [[productID[count],name[count],size[count],color[count],inStock[count]]]
         count+=1
     return list
-     
