@@ -17,7 +17,7 @@ def setListMulti(inventory,productID,name,size,color,inStock):
     s = []
     counter = 2
 
-    #reads inventory list line by line
+    #reads inventory list line by line till the last line
     while counter < len(inventory) :
         #removes all spaces from each line in inventory and saves it in a temp list 's'
         s = list(filter(None,inventory[counter].split("\t")))
@@ -28,7 +28,11 @@ def setListMulti(inventory,productID,name,size,color,inStock):
         #if list(s) contains 4 elements only, it means that an empty name was deleted and
         #it should be replaced with an N/A
         if len(s) == 4:
+            productID.append(s[0])
             name.append("N/A")
+            size.append(s[1])
+            color.append(s[2])
+            inStock.append(s[3])
         else:
             productID.append(s[0])
             name.append(s[1])
@@ -42,7 +46,6 @@ def setListMulti(inventory,productID,name,size,color,inStock):
         #clears temp list
         s.clear()
     print("\n\nInventory_updated.txt has been Imported!")
-    print(productID)
 
 #this function reads opened file and assigns each row to its appropriate value in the lists above.(for single tabs)
 def setList(inventory,productID,name,size,color,inStock):  
@@ -99,13 +102,14 @@ def addItem(inventory,productID,name,size,color,inStock):
     notValid = True
     update = "" #temp string
 
-    #checks if product ID is invalid
+    #checks if product ID is invalid (must be 7 digits)
     while notValid:
-        if len(x) != 7:
-            x = input("product ID must be 7 digits: ")
-        else:
+        if len(x) == 7 and x.isdigit():
             productID.append(x)
             notValid = False
+        else:
+            x = input("Product ID must be 7 digits: ")
+
     update=update+x+'\t'    #updates temporary string
 
     n = input("Please enter the name of the product: ")
@@ -145,11 +149,13 @@ def addItem(inventory,productID,name,size,color,inStock):
     backup(inventory)
     mainList(inventory,productID,name,size,color,inStock)
 
+#functions that performs as a home button
 def mainList(inventory,productID,name,size,color,inStock):
     r = input("press return to go to main list")
     if r == "":
         options(inventory,productID,name,size,color,inStock)
 
+#function that creates temp .txt backup file
 def backup(inventory):
     with open('inventoryBackup.txt','r+') as b:
             b.writelines(["%s\n" % item  for item in inventory])
