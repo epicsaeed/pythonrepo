@@ -1,15 +1,55 @@
-
 import errorCheck
 
-#this functions checks if input file has one tab or multiple tabs and calls set list accordingly
-def checkFile(inventory,productID,name,size,color,inStock):
-    temp = []
-    for word in inventory[2].split("\t"):
-        temp.append(word)
-    if '' in temp:
-        setListMulti(inventory,productID,name,size,color,inStock)
-    else:
-        setList(inventory,productID,name,size,color,inStock)
+#this functions restores any changes (add/del) performed in the previous run
+def restore(productID,name,size,color,inStock):
+    added = []
+    addedID = []
+    deleted = []
+    file = open('inventoryBackup.txt', 'r')
+    #adds the product ID's of items added/deleted to a list
+    for line in file:
+        if line[0] == 'A':
+            added.append(line[1:])
+            addedID.append(line[1:8])
+        elif line[0] == 'D':
+            deleted.append(line[1:8])
+    print("\nProduct ID of items added on the last run: ",addedID)
+    print("\nProduct ID of items deleted on the last run: ",deleted,"\n")
+    #print(added)    #for testing purposes
+    #applies changes to current imported list
+    print("Would you like to add these changes to the current inventory list?")
+    x = input()
+    notValid = True
+    while notValid:
+        if x == 'y' or x == 'Y':
+            notValid = False
+            #update deleted items
+            count = 0
+            while count < len(deleted):
+                index = productID.index(deleted[count])
+                del productID[index]
+                del name[index]
+                del size[index]
+                del color[index]
+                del inStock[index]
+                count+=1
+            #update added items
+            count = 0
+            a = []
+            while count < len(added):
+                a = added[count].split("\t")
+                #print("A is ",a)
+                productID.append(a[0])
+                name.append(a[1])
+                size.append(a[2])
+                color.append(a[3])
+                inStock.append(a[4])
+                count+=1
+        elif x == 'n' or x == 'N':
+            print("x")
+            notValid = False
+        else:
+            x = input("Please select Y or N: ")
 
 #this function reads opened file and assigns each row to its appropriate value in the lists above.(for unknown tabs)
 def setListMulti(inventory,productID,name,size,color,inStock):  
@@ -35,7 +75,8 @@ def setListMulti(inventory,productID,name,size,color,inStock):
             inStock.append(s[3])
         else:
             productID.append(s[0])
-            name.append(s[1])
+            n = s[1]    
+            name.append(n[:10]) #take only 10 characters of the name
             size.append(s[2])
             color.append(s[3])
             inStock.append(s[4])
@@ -45,7 +86,7 @@ def setListMulti(inventory,productID,name,size,color,inStock):
 
         #clears temp list
         s.clear()
-    print("\n\nInventory_updated.txt has been Imported!")
+    print("\nInventory.txt has been Imported!\nNote: All names of items have been shortened for formatting")
 
 #this function reads opened file and assigns each row to its appropriate value in the lists above.(for single tabs)
 def setList(inventory,productID,name,size,color,inStock):  
@@ -71,16 +112,16 @@ def setList(inventory,productID,name,size,color,inStock):
 
         #adds each row to its appropriate list
         productID.append(s[0])
-        name.append(s[1])
+        n = s[1]
+        name.append(n[:10]) #take only 10 characters of the name
         size.append(s[2])
         color.append(s[3])
         inStock.append(s[4])
         counter+=1
 
         #clears temp list
-        print(s)
         s.clear()
-    print("\nInventory.txt has been Imported!")
+    print("\nInventory.txt has been Imported!\nNote: All names of items have been shortened for formatting")
 
 #shows the list of products
 def viewList(productID,name,size,color,inStock):
@@ -89,11 +130,12 @@ def viewList(productID,name,size,color,inStock):
     r = len(productID)
     print(r)
     
-    print("No.     ProductID       Name        Size        Color       inStock")
-    print("===================================================================")
+    print("No.\tProductID\tName\t\tSize\tColor\tinStock")
+    print('='*80)
     #prints all elements in the list
     while counter < r:
-        print(counter+1,".      ",productID[counter],"      ",name[counter],"      ",size[counter],"      ",color[counter],"      ",inStock[counter])
+        #print(counter+1,".\t",productID[counter],"\t",name[counter],size[counter],"\t",color[counter],"\t",inStock[counter])
+        print(counter+1,".\t",productID[counter],"\t",name[counter].ljust(15),size[counter],"\t",color[counter],"\t",inStock[counter])
         counter+=1
 
 #function to add items to the list
@@ -101,10 +143,13 @@ def addItem(inventory,productID,name,size,color,inStock):
     x = input("Please enter the product ID: ")
     notValid = True
     update = "" #temp string
-
+    adding = True
     #checks if product ID is invalid (must be 7 digits)
     while notValid:
         if len(x) == 7 and x.isdigit():
+            if x in productID:
+                print("Item already exists.")
+                mainList(inventory,productID,name,size,color,inStock)
             productID.append(x)
             notValid = False
         else:
@@ -113,18 +158,27 @@ def addItem(inventory,productID,name,size,color,inStock):
     update=update+x+'\t'    #updates temporary string
 
     n = input("Please enter the name of the product: ")
-    if n == "":
-        name.append("N/A")
-    else:
-        name.append(n)
-    update=update+n+'\t'
+    longName = True
+    #ensures users input a valid,short name
+    while longName:
+        if n == "":
+            longName = False
+            name.append("N/A")
+        elif len(n)>15:
+            n = input("Name must be 15 characters or less: ")
+        else:
+            longName = False
+            name.append(n)
+    update=update+n.ljust(15)+'\t\t'
 
+    #item size input field
     s = input("Please enter the size of the item: ")
     if s == "":
         size.append("N/A")
     else:
         size.append(s)
     update=update+s+'\t'
+
 
     c = input("Please enter the color of the product: ")
     if c == "":
@@ -143,10 +197,9 @@ def addItem(inventory,productID,name,size,color,inStock):
             print("Please enter a number: ")
             iS = input()
     update=update+iS+'\n'
-
     print("Item has been added.")
     inventory.append(update)    #appends opened list with temp string
-    backup(inventory)
+    backup(x,adding,productID,name,size,color,inStock)
     mainList(inventory,productID,name,size,color,inStock)
 
 #functions that performs as a home button
@@ -156,9 +209,19 @@ def mainList(inventory,productID,name,size,color,inStock):
         options(inventory,productID,name,size,color,inStock)
 
 #function that creates temp .txt backup file
-def backup(inventory):
-    with open('inventoryBackup.txt','r+') as b:
-            b.writelines(["%s\n" % item  for item in inventory])
+def backup(item,adding,productID,name,size,color,inStock):
+    with open('inventoryBackup.txt','a') as b:
+        if adding:
+            index = productID.index(item)
+            #x=b.read()+'A'+item+'\n'
+            x='\n'+'A'+item+'\t'+name[index]+'\t'+size[index]+'\t'+color[index]+'\t'+inStock[index]
+            #b.flush()
+            b.write(x)
+        else:
+            #x=b.read()+'D'+item+'\n'
+            #b.flush()
+            x='\n'+'D'+item
+            b.write(x)
 
 #functions that shows available options
 def options(inventory,productID,name,size,color,inStock):
@@ -187,17 +250,21 @@ def options(inventory,productID,name,size,color,inStock):
 def delItem(inventory,productID,name,size,color,inStock):
     viewList(productID,name,size,color,inStock)
     notValid = True
+    adding = False
     L = len(productID)
+    if L == 0:
+        print("No items available on the list.")
+        mainList(inventory,productID,name,size,color,inStock)
     x = input("Please enter the number of item you would like to delete: ")       
     while notValid:    
-        if errorCheck.isValid(x) and int(x) !=0 and int(x)<int(L):
+        if errorCheck.isValid(x) and int(x) !=0 and int(x)<=int(L):
             x = int(x)
             #deletes the selected item no.        
             notValid = False
             x-=1
             #creating temp backup
             del inventory[x+2]  
-            backup(inventory)    
+            backup(productID[x],adding,productID,name,size,color,inStock)    
             #deleting selected row elements
             del productID[x]
             del name[x]
@@ -221,17 +288,18 @@ def exportList(inventory,productID,name,size,color,inStock):
     data = createListForExport(productID,name,size,color,inStock)
     with open(exportedFile, "w",newline = '') as output:
         a = csv.writer(output,delimiter=',')
-        headline = [['Product ID','Name','Size','Color','Availability'],]
+        headline = [["No.",'Product ID','Name','Size','Color','Availability'],]
         a.writerows(headline)
         a.writerows(data)
+    print("'inventory.csv' has been exported.\n")
     mainList(inventory,productID,name,size,color,inStock)
-
+    
 #creates a list fot exporting
 def createListForExport(productID,name,size,color,inStock):
     L = len(name)
     count = 0
     list = [[]]
     while count < L:
-        list = list + [[productID[count],name[count],size[count],color[count],inStock[count]]]
+        list = list + [[count+1,productID[count],name[count],size[count],color[count],inStock[count]]]
         count+=1
     return list

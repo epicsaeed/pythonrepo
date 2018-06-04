@@ -1,0 +1,10 @@
+productID	name				size	color 	inStock
+=========================================================================
+1365974		shirt				5	blue	17
+9554144		simple shorts			3xl	black	2
+9554143		shorts for täßt purpose		3xl	green	5
+6561245		belt				o/s	brown	0
+1365973						7	blue	1
+4546824		shirt				M	multi	-
+7245413		some super high high heels	EU 39	red	50
+6581245		belt				o/s	brown	3
