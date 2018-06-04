@@ -1,4 +1,6 @@
 import errorCheck
+import subprocess
+import os
 
 #this functions restores any changes (add/del) performed in the previous run
 def restore(productID,name,size,color,inStock):
@@ -292,6 +294,7 @@ def exportList(inventory,productID,name,size,color,inStock):
         a.writerows(headline)
         a.writerows(data)
     print("'inventory.csv' has been exported.\n")
+    runFile("inventory.csv")
     mainList(inventory,productID,name,size,color,inStock)
     
 #creates a list fot exporting
@@ -303,3 +306,10 @@ def createListForExport(productID,name,size,color,inStock):
         list = list + [[count+1,productID[count],name[count],size[count],color[count],inStock[count]]]
         count+=1
     return list
+
+#opens exported csv file with default application 
+def runFile(filename):
+    try:
+        os.startfile(filename)
+    except AttributeError:
+        subprocess.call(['open', filename])
