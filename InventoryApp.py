@@ -3,9 +3,15 @@
 
 import errorCheck   #imports isValid method
 import ListOptions  #imports list option methods
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+
+#shows a dialog window for user to select text file
+Tk().withdraw()
+path = askopenfilename() # show an "Open" dialog box and return the path to the selected file
 
 #opens file and create a list of each line
-with open('inventory_updated.txt','r+') as f:
+with open(path,'r+') as f:
     inventory = list(f)
 
 #global variables
