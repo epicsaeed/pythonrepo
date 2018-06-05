@@ -252,7 +252,7 @@ def options(inventory,productID,name,size,color,inStock):
     option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Edit: \n6. Exit: ")
     notValid = True
     while notValid:
-        if errorCheck.isValid(option) and int(option) < 6 and int(option) != 0:
+        if errorCheck.isValid(option) and int(option) < 7 and int(option) != 0:
             option = int(option)
             notValid = False
             if option == 1:
