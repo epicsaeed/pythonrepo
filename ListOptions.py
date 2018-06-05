@@ -2,6 +2,30 @@ import errorCheck
 import subprocess
 import os
 
+#this function allows users to edit product details such as inStock
+def edit(inventory,productID,name,size,color,inStock):
+    viewList(productID,name,size,color,inStock)
+    notValid = True
+    L = len(productID)
+    x = input("Please select the item you want to edit: ")
+    while notValid:    
+        if errorCheck.isValid(x) and int(x) !=0 and int(x)<=int(L):
+            x = int(x)
+            notValid = False
+            print("How much is in stock of item '",name[x-1],"' ?: ")
+            availability = input()
+            notInt = True
+            while notInt:
+                if availability.isdigit() or int(availability) == 0:
+                    notInt = False
+                    inStock[x-1] = availability 
+                    print(name[x-1]," has been updated to ",availability," in stock.")
+                    mainList(inventory,productID,name,size,color,inStock)
+                else:
+                    availability = input("Please enter a valid value: ")
+        else:
+            x = input("Please enter a valid item number: ")
+
 #this functions restores any changes (add/del) performed in the previous run
 def restore(productID,name,size,color,inStock):
     added = []
@@ -11,19 +35,18 @@ def restore(productID,name,size,color,inStock):
     #adds the product ID's of items added/deleted to a list
     for line in file:
         if line[0] == 'A':
-            added.append(line[1:])
+            added.append(line[1:].rstrip())
             addedID.append(line[1:8])
         elif line[0] == 'D':
             deleted.append(line[1:8])
     print("\nProduct ID of items added on the last run: ",addedID)
     print("\nProduct ID of items deleted on the last run: ",deleted,"\n")
-    #print(added)    #for testing purposes
-    #applies changes to current imported list
     print("Would you like to add these changes to the current inventory list?")
     x = input()
     notValid = True
     while notValid:
         if x == 'y' or x == 'Y':
+            print("Inventory List has been updated!")
             notValid = False
             #update deleted items
             count = 0
@@ -48,7 +71,6 @@ def restore(productID,name,size,color,inStock):
                 inStock.append(a[4])
                 count+=1
         elif x == 'n' or x == 'N':
-            print("x")
             notValid = False
         else:
             x = input("Please select Y or N: ")
@@ -227,7 +249,7 @@ def backup(item,adding,productID,name,size,color,inStock):
 
 #functions that shows available options
 def options(inventory,productID,name,size,color,inStock):
-    option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Exit: ")
+    option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Edit: \n6. Exit: ")
     notValid = True
     while notValid:
         if errorCheck.isValid(option) and int(option) < 6 and int(option) != 0:
@@ -243,6 +265,8 @@ def options(inventory,productID,name,size,color,inStock):
             if option == 4:
                 exportList(inventory,productID,name,size,color,inStock)
             if option == 5:
+                edit(inventory,productID,name,size,color,inStock)
+            if option == 6:
                 exit()
         else:
             print("Please choose a number from the list above ONLY: ")
