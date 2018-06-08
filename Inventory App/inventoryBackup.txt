@@ -1,0 +1,5 @@
+
+D6581245
+A1234567	blubb	N/A	N/A	7
+A9863454	denim jacket	M	blue	23
+A5876523	jeans	29	N/A	43

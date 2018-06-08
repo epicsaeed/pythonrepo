@@ -1,6 +1,7 @@
-import errorCheck
 import subprocess
 import os
+
+
 
 #this function allows users to edit product details such as inStock
 def edit(inventory,productID,name,size,color,inStock):
@@ -9,7 +10,7 @@ def edit(inventory,productID,name,size,color,inStock):
     L = len(productID)
     x = input("Please select the item you want to edit: ")
     while notValid:    
-        if errorCheck.isValid(x) and int(x) !=0 and int(x)<=int(L):
+        if x.isdigit() and int(x) !=0 and int(x)<=int(L):
             x = int(x)
             notValid = False
             print("How much is in stock of item '",name[x-1],"' ?: ")
@@ -31,7 +32,8 @@ def restore(productID,name,size,color,inStock):
     added = []
     addedID = []
     deleted = []
-    file = open('inventoryBackup.txt', 'r')
+    path = '/Users/saeed/pythonrepo/Inventory App/inventoryBackup.txt'
+    file = open(path, 'r')
     #adds the product ID's of items added/deleted to a list
     for line in file:
         if line[0] == 'A':
@@ -214,7 +216,7 @@ def addItem(inventory,productID,name,size,color,inStock):
     iS = input("How many of this item is in stock?: ")
     notValid = True
     while notValid:
-        if errorCheck.isValid(iS):
+        if iS.digit():
             inStock.append(iS)
             notValid = False
         else:
@@ -252,7 +254,7 @@ def options(inventory,productID,name,size,color,inStock):
     option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Edit: \n6. Exit: ")
     notValid = True
     while notValid:
-        if errorCheck.isValid(option) and int(option) < 7 and int(option) != 0:
+        if option.isdigit() and int(option) < 7 and int(option) != 0:
             option = int(option)
             notValid = False
             if option == 1:
@@ -283,7 +285,7 @@ def delItem(inventory,productID,name,size,color,inStock):
         mainList(inventory,productID,name,size,color,inStock)
     x = input("Please enter the number of item you would like to delete: ")       
     while notValid:    
-        if errorCheck.isValid(x) and int(x) !=0 and int(x)<=int(L):
+        if x.isdigit() and int(x) !=0 and int(x)<=int(L):
             x = int(x)
             #deletes the selected item no.        
             notValid = False
