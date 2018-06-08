@@ -17,6 +17,36 @@ def ImportTXTorDB():
             print("Please insert a valid value: ")
             x = input()
 
+#searches database by name of item
+def searchDB(cursor,conn):
+    found = []
+    count = 0
+    name = input("Please enter a keyword: ")
+    cursor.execute("SELECT * FROM data WHERE name=?", (name,))
+    print("Results found for '",name,"': ")
+    for row in cursor.fetchall():
+        found.append(row)
+    print(len(found)," item/s found.")
+    print("No.\tName\t\tProduct ID")
+    while count < len(found):
+        print(count+1,"\t",found[count][1].ljust(10),"\t",found[count][0])
+        count+=1
+    # print("Select an item for options: No. ")
+    # item = input()
+    # if item.isdigit() and int(item) <= len(found):
+    #     item = int(item)
+    #     print("1. Delete\n2.Edit: ")
+    #     option = input()
+    #     notValid = True
+    #     while notValid:
+    #         if option.isdigit():
+    #             if option == 1:
+    #                 #delete the item
+    #             if option == 2:
+    #                 #edit the item
+    #         else:
+    #             option = input("Please select a valid input: ")
+
 #reads all input in database
 def readFromDB(productID,name,size,color,inStock,cursor):
     cursor.execute('SELECT * FROM data')
@@ -26,6 +56,7 @@ def readFromDB(productID,name,size,color,inStock,cursor):
         size.append(row[2])
         color.append(row[3])
         inStock.append(row[4])
+    print("inventory.db has been imported!")
 
 #creates a table if it does not exist
 def createTable(curser):
@@ -44,8 +75,8 @@ def removeFromDB(p,cursor,conn):
     conn.commit()
 
 #Edits inStock value
-def editInDB(oldInStock,newInStock,cursor,conn):
-    cursor.execute('UPDATE data SET value =(?) WHERE value =(?)',(newInStock,newInStock))
+def editInDB(oldInStock,newInStock,pid,cursor,conn):
+    cursor.execute("UPDATE data SET instock =? WHERE instock =? AND productid =?",(newInStock,oldInStock,pid))
     conn.commit()
 
 #shows the database
@@ -61,14 +92,16 @@ def ifDBExists():
     return db.is_file()
 
 #this function allows users to edit product details such as inStock
-def edit(inventory,productID,name,size,color,inStock):
+def edit(productID,name,size,color,inStock,cursor,conn):
     viewList(productID,name,size,color,inStock)
     notValid = True
     L = len(productID)
     x = input("Please select the item you want to edit: ")
+    oldInStock = 0
     while notValid:    
         if x.isdigit() and int(x) !=0 and int(x)<=int(L):
             x = int(x)
+            oldInStock = inStock[x-1]
             notValid = False
             print("How much is in stock of item '",name[x-1],"' ?: ")
             availability = input()
@@ -78,7 +111,8 @@ def edit(inventory,productID,name,size,color,inStock):
                     notInt = False
                     inStock[x-1] = availability 
                     print(name[x-1]," has been updated to ",availability," in stock.")
-                    #mainList(inventory,productID,name,size,color,inStock)
+                    editInDB(oldInStock,availability,productID[x-1],cursor,conn)
+                    mainListDB(productID,name,size,color,inStock,cursor,conn)
                 else:
                     availability = input("Please enter a valid value: ")
         else:
@@ -94,10 +128,9 @@ def viewList(productID,name,size,color,inStock):
     #prints all elements in the list
     while counter < r:
         #print(counter+1,".\t",productID[counter],"\t",name[counter],size[counter],"\t",color[counter],"\t",inStock[counter])
-        print(counter+1,".\t",productID[counter],"\t",name[counter].ljust(15),size[counter],"\t",color[counter],"\t",inStock[counter])
+        print(counter+1,".\t",productID[counter],"\t",name[counter].ljust(15),size[counter],"\t",color[counter].ljust(7),"\t",inStock[counter])
         counter+=1
     
-
 #function to add items to the list
 def addItem(productID,name,size,color,inStock,cursor,conn):
     x = input("Please enter the product ID: ")
@@ -118,6 +151,7 @@ def addItem(productID,name,size,color,inStock,cursor,conn):
     #ensures users input a valid,short name
     while longName:
         if n == "":
+            n = "N/A"
             longName = False
             name.append("N/A")
         elif len(n)>15:
@@ -129,12 +163,14 @@ def addItem(productID,name,size,color,inStock,cursor,conn):
     #item size input field
     s = input("Please enter the size of the item: ")
     if s == "":
+        s = "N/A"
         size.append("N/A")
     else:
         size.append(s)
 
     c = input("Please enter the color of the product: ")
     if c == "":
+        c = "N/A"
         color.append("N/A")
     else:
         color.append(c)
@@ -159,10 +195,10 @@ def mainListDB(productID,name,size,color,inStock,cursor,conn):
 
 #functions that shows available options for DB input
 def optionsDB(productID,name,size,color,inStock,cursor,conn):
-    option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Edit: \n6. Exit: ")
+    option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Edit: \n6. Search:\n0. Exit ")
     notValid = True
     while notValid:
-        if option.isdigit() and int(option) < 7 and int(option) != 0:
+        if option.isdigit() and int(option) < 7:
             option = int(option)
             notValid = False
             if option == 1:
@@ -174,10 +210,13 @@ def optionsDB(productID,name,size,color,inStock,cursor,conn):
                 delItem(productID,name,size,color,inStock,cursor,conn)
             if option == 4:
                 exportList(productID,name,size,color,inStock)
-            # if option == 5:
-            #     edit(inventory,productID,name,size,color,inStock)
-            # if option == 6:
-            #     exit()
+            if option == 5:
+                edit(productID,name,size,color,inStock,cursor,conn)
+            if option == 6:
+                searchDB(cursor,conn)
+                mainListDB(productID,name,size,color,inStock,cursor,conn)
+            if option == 0:
+                exit()
         else:
             print("Please choose a number from the list above ONLY: ")
             option = input()
@@ -197,6 +236,12 @@ def delItem(productID,name,size,color,inStock,cursor,conn):
             #deletes the selected item no.        
             notValid = False
             x-=1    
+
+            #confirm delete
+            print("ARE YOU SURE YOU WANT TO DELETE '",name[x],"' ?\nPRESS RETURN TO CONFIRM")
+            sure = input()
+            if sure!="":
+              break
 
             ID = productID[x]
             #deleting selected row elements from memory
