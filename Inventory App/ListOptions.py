@@ -1,15 +1,117 @@
 import subprocess
 import os
+import sqlite3
+import time
+
+def ImportTXTorDB():
+    x = input("Please select an option below:\n1. Import data from txt file.\n2. Import data from database: ")
+    notValid = True
+    while notValid:
+        if int(x)==1:
+            notValid = False
+
+        if int(x)==2:
+            notValid = False
+        else:
+            print("Please insert a valid value: ")
+            x = input()
+
+#searches database by name of item
+def searchDB(productID,name,size,color,inStock,cursor,conn):
+    found = []
+    count = 0
+    name = input("Please enter a keyword: ")
+    cursor.execute("SELECT * FROM data WHERE name=?", (name,))
+    print("Results found for '",name,"': ")
+    for row in cursor.fetchall():
+        found.append(row)
+    print(len(found)," item/s found.")
+    print("No.\tName\t\tProduct ID")
+    while count < len(found):
+        print(count+1,"\t",found[count][1].ljust(10),"\t",found[count][0])
+        count+=1
+    # print("Select an item for options: No. ")
+    # item = input()
+    # if item.isdigit() and int(item) <= len(found):
+    #     item = int(item)
+    #     print("1. Delete\n2.Edit: ")
+    #     option = input()
+    #     notValid = True
+    #     index = productID.index(found[item-1][0])
+    #     while notValid:
+    #         if option.isdigit():
+    #             if option == 1:
+    #                 #delete the item
+    #                 notValid = False
+    #                 ID = productID[index]
+    #                 del productID[index]
+    #                 del name[index]
+    #                 del size[index]
+    #                 del color[index]
+    #                 del inStock[index]
+    #                 removeFromDB(ID,cursor,conn)
+    #                 print("Item deleted.")
+    #             if option == 2:
+    #                 #edit the item
+    #                 notValid = False 
+    #         else:
+    #             option = input("Please select a valid input: ")
+
+#reads all input in database
+def readFromDB(productID,name,size,color,inStock,cursor):
+    cursor.execute('SELECT * FROM data')
+    for row in cursor.fetchall():
+        productID.append(row[0])
+        name.append(row[1])
+        size.append(row[2])
+        color.append(row[3])
+        inStock.append(row[4])
+    print("inventory.db has been imported!")
+
+#creates a table if it does not exist
+def createTable(curser):
+    curser.execute('CREATE TABLE IF NOT EXISTS data(productid INTEGER, name TEXT, size TEXT, color TEXT, instock INTEGER)')
+
+#used to add products into the database
+def addToDB(p,n,s,c,stock,cursor,conn):
+    cursor.execute("INSERT INTO data VALUES(:productid,:name,:size,:color,:instock)",{'productid':p,'name':n,'size':s,'color':c,'instock':stock})
+    conn.commit()
+    # cursor.close()
+    # conn.close()
+
+#removed item of passed Product ID
+def removeFromDB(p,cursor,conn):
+    cursor.execute("DELETE FROM data WHERE  productid =?",(p,))
+    conn.commit()
+
+#Edits inStock value
+def editInDB(oldInStock,newInStock,pid,cursor,conn):
+    cursor.execute("UPDATE data SET instock =? WHERE instock =? AND productid =?",(newInStock,oldInStock,pid))
+    conn.commit()
+
+#shows the database
+def viewDB(cursor):
+    cursor.execute('SELECT * FROM data')
+    for row in cursor.fetchall():
+        print(row)
+
+#returns true if a database exists
+def ifDBExists():
+    from pathlib import Path
+    db = Path("/Users/saeed/pythonrepo/inventory.db")
+    return db.is_file()
 
 #this function allows users to edit product details such as inStock
-def edit(inventory,productID,name,size,color,inStock):
+def edit(productID,name,size,color,inStock,cursor,conn):
     viewList(productID,name,size,color,inStock)
     notValid = True
     L = len(productID)
     x = input("Please select the item you want to edit: ")
+    oldInStock = 0
     while notValid:    
         if x.isdigit() and int(x) !=0 and int(x)<=int(L):
             x = int(x)
+            oldInStock = inStock[x-1]
             notValid = False
             print("How much is in stock of item '",name[x-1],"' ?: ")
             availability = input()
@@ -19,68 +121,30 @@ def edit(inventory,productID,name,size,color,inStock):
                     notInt = False
                     inStock[x-1] = availability 
                     print(name[x-1]," has been updated to ",availability," in stock.")
-                    mainList(inventory,productID,name,size,color,inStock)
+                    editInDB(oldInStock,availability,productID[x-1],cursor,conn)
+                    mainListDB(productID,name,size,color,inStock,cursor,conn)
                 else:
                     availability = input("Please enter a valid value: ")
         else:
             x = input("Please enter a valid item number: ")
 
-#this functions restores any changes (add/del) performed in the previous run
-def restore(productID,name,size,color,inStock):
-    added = []
-    addedID = []
-    deleted = []
-    path = '/Users/saeed/pythonrepo/Inventory App/inventoryBackup.txt'
-    file = open(path, 'r')
-    #adds the product ID's of items added/deleted to a list
-    for line in file:
-        if line[0] == 'A':
-            added.append(line[1:].rstrip())
-            addedID.append(line[1:8])
-        elif line[0] == 'D':
-            deleted.append(line[1:8])
-    print("\nProduct ID of items added on the last run: ",addedID)
-    print("\nProduct ID of items deleted on the last run: ",deleted,"\n")
-    print("Would you like to add these changes to the current inventory list?")
-    x = input()
-    notValid = True
-    while notValid:
-        if x == 'y' or x == 'Y':
-            print("Inventory List has been updated!")
-            notValid = False
-            #update deleted items
-            count = 0
-            while count < len(deleted):
-                index = productID.index(deleted[count])
-                del productID[index]
-                del name[index]
-                del size[index]
-                del color[index]
-                del inStock[index]
-                count+=1
-            #update added items
-            count = 0
-            a = []
-            while count < len(added):
-                a = added[count].split("\t")
-                #print("A is ",a)
-                productID.append(a[0])
-                name.append(a[1])
-                size.append(a[2])
-                color.append(a[3])
-                inStock.append(a[4])
-                count+=1
-        elif x == 'n' or x == 'N':
-            notValid = False
-        else:
-            x = input("Please select Y or N: ")
-
-#this function reads opened file and assigns each row to its appropriate value in the lists above.(for unknown tabs)
+#shows the list of products
+def viewList(productID,name,size,color,inStock):
+    counter = 0
+    #excludes the labels from inventory length
+    r = len(productID)
+    print("No.\tProductID\tName\t\tSize\tColor\tinStock")
+    print('='*80)
+    #prints all elements in the list
+    while counter < r:
+        #print(counter+1,".\t",productID[counter],"\t",name[counter],size[counter],"\t",color[counter],"\t",inStock[counter])
+        print(counter+1,".\t",productID[counter],"\t",name[counter].ljust(15),size[counter],"\t",color[counter].ljust(7),"\t",inStock[counter])
+        counter+=1
+    
 def setListMulti(inventory,productID,name,size,color,inStock):  
     #variables 
     s = []
     counter = 2
-
     #reads inventory list line by line till the last line
     while counter < len(inventory) :
         #removes all spaces from each line in inventory and saves it in a temp list 's'
@@ -112,80 +176,28 @@ def setListMulti(inventory,productID,name,size,color,inStock):
         s.clear()
     print("\nInventory.txt has been Imported!\nNote: All names of items have been shortened for formatting")
 
-#this function reads opened file and assigns each row to its appropriate value in the lists above.(for single tabs)
-def setList(inventory,productID,name,size,color,inStock):  
-    #variables
-    s = []
-    counter = 2
-    #reads inventory list line by line
-    while counter < len(inventory):
-        #splits each line by tabs and save in a temp list (s)
-        for word in inventory[counter].split("\t"):
-            s.append(word)
-        #removes \n from last element
-        s[-1] = s[-1].strip()
-
-        
-        #replaces empty string in s with 'N/A'
-        i = 0
-        while i < len(s):
-            if s[i]:
-                i+=1
-            else:
-                s[i] = "N/A"
-
-        #adds each row to its appropriate list
-        productID.append(s[0])
-        n = s[1]
-        name.append(n[:10]) #take only 10 characters of the name
-        size.append(s[2])
-        color.append(s[3])
-        inStock.append(s[4])
-        counter+=1
-
-        #clears temp list
-        s.clear()
-    print("\nInventory.txt has been Imported!\nNote: All names of items have been shortened for formatting")
-
-#shows the list of products
-def viewList(productID,name,size,color,inStock):
-    counter = 0
-    #excludes the labels from inventory length
-    r = len(productID)
-    print(r)
-    
-    print("No.\tProductID\tName\t\tSize\tColor\tinStock")
-    print('='*80)
-    #prints all elements in the list
-    while counter < r:
-        #print(counter+1,".\t",productID[counter],"\t",name[counter],size[counter],"\t",color[counter],"\t",inStock[counter])
-        print(counter+1,".\t",productID[counter],"\t",name[counter].ljust(15),size[counter],"\t",color[counter],"\t",inStock[counter])
-        counter+=1
 
 #function to add items to the list
-def addItem(inventory,productID,name,size,color,inStock):
+def addItem(productID,name,size,color,inStock,cursor,conn):
     x = input("Please enter the product ID: ")
     notValid = True
-    update = "" #temp string
-    adding = True
     #checks if product ID is invalid (must be 7 digits)
     while notValid:
         if len(x) == 7 and x.isdigit():
             if x in productID:
                 print("Item already exists.")
-                mainList(inventory,productID,name,size,color,inStock)
+                mainListDB(productID,name,size,color,inStock,cursor,conn)
             productID.append(x)
             notValid = False
         else:
             x = input("Product ID must be 7 digits: ")
-
-    update=update+x+'\t'    #updates temporary string
 
     n = input("Please enter the name of the product: ")
     longName = True
     #ensures users input a valid,short name
     while longName:
         if n == "":
+            n = "N/A"
             longName = False
             name.append("N/A")
         elif len(n)>15:
@@ -193,110 +205,100 @@ def addItem(inventory,productID,name,size,color,inStock):
         else:
             longName = False
             name.append(n)
-    update=update+n.ljust(15)+'\t\t'
 
     #item size input field
     s = input("Please enter the size of the item: ")
     if s == "":
+        s = "N/A"
         size.append("N/A")
     else:
         size.append(s)
-    update=update+s+'\t'
-
 
     c = input("Please enter the color of the product: ")
     if c == "":
+        c = "N/A"
         color.append("N/A")
     else:
         color.append(c)
-    update=update+c+'\t'
 
     iS = input("How many of this item is in stock?: ")
     notValid = True
     while notValid:
-        if iS.digit():
+        if iS.isdigit():
             inStock.append(iS)
             notValid = False
         else:
             print("Please enter a number: ")
             iS = input()
-    update=update+iS+'\n'
+    addToDB(x,n,s,c,iS,cursor,conn)
     print("Item has been added.")
-    inventory.append(update)    #appends opened list with temp string
-    backup(x,adding,productID,name,size,color,inStock)
-    mainList(inventory,productID,name,size,color,inStock)
+    mainListDB(productID,name,size,color,inStock,cursor,conn)
 
-#functions that performs as a home button
-def mainList(inventory,productID,name,size,color,inStock):
+def mainListDB(productID,name,size,color,inStock,cursor,conn):
     r = input("press return to go to main list")
     if r == "":
-        options(inventory,productID,name,size,color,inStock)
+        optionsDB(productID,name,size,color,inStock,cursor,conn)
 
-#function that creates temp .txt backup file
-def backup(item,adding,productID,name,size,color,inStock):
-    with open('inventoryBackup.txt','a') as b:
-        if adding:
-            index = productID.index(item)
-            #x=b.read()+'A'+item+'\n'
-            x='\n'+'A'+item+'\t'+name[index]+'\t'+size[index]+'\t'+color[index]+'\t'+inStock[index]
-            #b.flush()
-            b.write(x)
-        else:
-            #x=b.read()+'D'+item+'\n'
-            #b.flush()
-            x='\n'+'D'+item
-            b.write(x)
-
-#functions that shows available options
-def options(inventory,productID,name,size,color,inStock):
-    option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Edit: \n6. Exit: ")
+#functions that shows available options for DB input
+def optionsDB(productID,name,size,color,inStock,cursor,conn):
+    option = input("Please select from the options below:\n1. View Inventory\n2. Add item\n3. Delete item\n4. Export\n5. Edit: \n6. Search:\n0. Exit ")
     notValid = True
     while notValid:
-        if option.isdigit() and int(option) < 7 and int(option) != 0:
+        if option.isdigit() and int(option) < 7:
             option = int(option)
             notValid = False
             if option == 1:
                 viewList(productID,name,size,color,inStock)
-                mainList(inventory,productID,name,size,color,inStock)
+                mainListDB(productID,name,size,color,inStock,cursor,conn)
             if option == 2:
-                addItem(inventory,productID,name,size,color,inStock)
+                addItem(productID,name,size,color,inStock,cursor,conn)
             if option == 3:
-                delItem(inventory,productID,name,size,color,inStock)
+                delItem(productID,name,size,color,inStock,cursor,conn)
             if option == 4:
-                exportList(inventory,productID,name,size,color,inStock)
+                exportList(productID,name,size,color,inStock)
             if option == 5:
-                edit(inventory,productID,name,size,color,inStock)
+                edit(productID,name,size,color,inStock,cursor,conn)
             if option == 6:
+                searchDB(productID,name,size,color,inStock,cursor,conn)
+                mainListDB(productID,name,size,color,inStock,cursor,conn)
+            if option == 0:
                 exit()
         else:
             print("Please choose a number from the list above ONLY: ")
             option = input()
-
+            
 #function to delete items from the list 
-def delItem(inventory,productID,name,size,color,inStock):
+def delItem(productID,name,size,color,inStock,cursor,conn):
     viewList(productID,name,size,color,inStock)
     notValid = True
-    adding = False
     L = len(productID)
     if L == 0:
         print("No items available on the list.")
-        mainList(inventory,productID,name,size,color,inStock)
+        mainListDB(productID,name,size,color,inStock,cursor,conn)
     x = input("Please enter the number of item you would like to delete: ")       
     while notValid:    
         if x.isdigit() and int(x) !=0 and int(x)<=int(L):
             x = int(x)
             #deletes the selected item no.        
             notValid = False
-            x-=1
-            #creating temp backup
-            del inventory[x+2]  
-            backup(productID[x],adding,productID,name,size,color,inStock)    
-            #deleting selected row elements
+            x-=1    
+
+            #confirm delete
+            print("ARE YOU SURE YOU WANT TO DELETE '",name[x],"' ?\nPRESS RETURN TO CONFIRM")
+            sure = input()
+            if sure!="":
+              break
+
+            ID = productID[x]
+            #deleting selected row elements from memory
             del productID[x]
             del name[x]
             del size[x]
             del color[x]
             del inStock[x]
+
+            #deleting row from DB
+            removeFromDB(ID,cursor,conn)
 
             print("Item No.",x+1," has been deleted.\nPress Return to view updated list")
             enter = input()
@@ -304,11 +306,11 @@ def delItem(inventory,productID,name,size,color,inStock):
                 viewList(productID,name,size,color,inStock) 
         else:
             x = input("Please enter a valid item number: ")
-
-    mainList(inventory,productID,name,size,color,inStock)
+    
+    mainListDB(productID,name,size,color,inStock,cursor,conn)
 
 #function that exports the updated list to .csv
-def exportList(inventory,productID,name,size,color,inStock):
+def exportList(productID,name,size,color,inStock):
     import csv
     exportedFile = "inventory.csv"
     data = createListForExport(productID,name,size,color,inStock)
@@ -319,7 +321,7 @@ def exportList(inventory,productID,name,size,color,inStock):
         a.writerows(data)
     print("'inventory.csv' has been exported.\n")
     runFile("inventory.csv")
-    mainList(inventory,productID,name,size,color,inStock)
+    #mainListDB(productID,name,size,color,inStock,cursor,conn)
     
 #creates a list fot exporting
 def createListForExport(productID,name,size,color,inStock):
@@ -337,3 +339,4 @@ def runFile(filename):
         os.startfile(filename)
     except AttributeError:
         subprocess.call(['open', filename])
+
