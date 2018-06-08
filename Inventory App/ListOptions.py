@@ -176,7 +176,6 @@ def setListMulti(inventory,productID,name,size,color,inStock):
         s.clear()
     print("\nInventory.txt has been Imported!\nNote: All names of items have been shortened for formatting")
 
-
 #function to add items to the list
 def addItem(productID,name,size,color,inStock,cursor,conn):
     x = input("Please enter the product ID: ")
@@ -184,7 +183,7 @@ def addItem(productID,name,size,color,inStock,cursor,conn):
     #checks if product ID is invalid (must be 7 digits)
     while notValid:
         if len(x) == 7 and x.isdigit():
-            if x in productID:
+            if int(x) in productID:
                 print("Item already exists.")
                 mainListDB(productID,name,size,color,inStock,cursor,conn)
             productID.append(x)
