@@ -25,11 +25,15 @@ def searchDB(productID,name,size,color,inStock,cursor,conn):
     print("Results found for '",name,"': ")
     for row in cursor.fetchall():
         found.append(row)
-    print(len(found)," item/s found.")
-    print("No.\tName\t\tProduct ID")
-    while count < len(found):
-        print(count+1,"\t",found[count][1].ljust(10),"\t",found[count][0])
-        count+=1
+    if len(found) == 0:
+        print("No elements found.")
+        mainListDB(productID,name,size,color,inStock,cursor,conn)
+    else:
+        print(len(found)," item/s found.")
+        print("No.\tName\t\tProduct ID")
+        while count < len(found):
+            print(count+1,"\t",found[count][1].ljust(10),"\t",found[count][0])
+            count+=1
     # print("Select an item for options: No. ")
     # item = input()
     # if item.isdigit() and int(item) <= len(found):
