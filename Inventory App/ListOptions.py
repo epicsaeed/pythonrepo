@@ -21,7 +21,7 @@ def searchDB(productID,name,size,color,inStock,cursor,conn):
     found = []
     count = 0
     name = input("Please enter a keyword: ")
-    cursor.execute("SELECT * FROM data WHERE name=?", (name,))
+    cursor.execute("SELECT * FROM data WHERE name LIKE ?",('%'+name+'%',))
     print("Results found for '",name,"': ")
     for row in cursor.fetchall():
         found.append(row)
