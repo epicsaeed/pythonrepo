@@ -21,21 +21,22 @@ def searchDB(productID,name,size,color,inStock,cursor,conn):
     found = []
     count = 0
     name = input("Please enter a keyword: ")
-    #cursor.execute("CREATE INDEX tag_id ON tags (productid)")
     cursor.execute("SELECT * FROM data WHERE name LIKE ?",('%'+name+'%',))
     print("Results found for '",name,"': ")
+    #adds all search results to a list 'found'
     for row in cursor.fetchall():
         found.append(row)
     if len(found) == 0:
         print("No elements found.")
-        mainListDB(productID,name,size,color,inStock,cursor,conn)
+        return None
     else:
+        #prints search results
         print(len(found)," item/s found.")
         print("No.\tName\t\tProduct ID")
         while count < len(found):
             print(count+1,"\t",found[count][1].ljust(10),"\t",found[count][0])
             count+=1
-    
+    #options to delete/edit items found in search result
     print("Please select from the options below:\n1. Delete items\n2. Edit items: ")
     select = input()
     notValid = True
@@ -48,28 +49,42 @@ def searchDB(productID,name,size,color,inStock,cursor,conn):
                 while notValidNumber:
                     if int(item) <= len(found):
                         notValidNumber = False
-                        cursor.execute("DELETE FROM data WHERE productid =?",(found[int(item)-1][0],))
-                        conn.commit()
-
-                        #delete the item from RAM variables list
-                        # item = int(item)
-                        # index = productID.index(found[item-1][0])
-                        # del productID[index]
-                        # del name[index]
-                        # del size[index]
-                        # del color[index]
-                        # del inStock[index]
-
-                        print("'",found[int(item)-1][1], "' has been deleted.")
+                        item = int(item)
+                        ID = found[int(item)-1][0]
+                        removeFromDB(ID,cursor,conn)
+                        print("'",found[item-1][1], "' has been deleted.")
                     else:
                         item = input("Please enter a valid number")
             else:
-                pass
+                item = input("Please enter the number of the item to be edited: ")
+                notValidNumber = True
+                while notValidNumber:
+                    if int(item) <= len(found):
+                        notValidNumber = False
+                        item = int(item)
+                        pid = found[int(item)-1][0]
+                        newInStock = input("Please enter the availability of the item: ")
+                        notDigit = True
+                        while notDigit:
+                            if newInStock.isdigit():
+                                notDigit = False
+                                oldInStock = found[item-1][4]
+                                newInStock = int(newInStock)
+                                editInDB(oldInStock,newInStock,pid,cursor,conn)
+                            else:
+                                newInStock = input("Please enter a valid value: ")
         else:
             select = input("Please select a valid input: ")
 
 #reads all input in database
 def readFromDB(productID,name,size,color,inStock,cursor):
+    #clears variablse
+    productID.clear()
+    name.clear()
+    size.clear()
+    color.clear()
+    inStock.clear()
+    #fills up variables from DB
     cursor.execute('SELECT * FROM data')
     for row in cursor.fetchall():
         productID.append(row[0])
@@ -77,7 +92,6 @@ def readFromDB(productID,name,size,color,inStock,cursor):
         size.append(row[2])
         color.append(row[3])
         inStock.append(row[4])
-    print("inventory.db has been imported!")
 
 #creates a table if it does not exist
 def createTable(curser):
@@ -272,6 +286,7 @@ def optionsDB(productID,name,size,color,inStock,cursor,conn):
                 mainListDB(productID,name,size,color,inStock,cursor,conn)
             if option == 6:
                 searchDB(productID,name,size,color,inStock,cursor,conn)
+                readFromDB(productID,name,size,color,inStock,cursor)
                 mainListDB(productID,name,size,color,inStock,cursor,conn)
             if option == 0:
                 exit()
@@ -348,4 +363,3 @@ def runFile(filename):
         os.startfile(filename)
     except AttributeError:
         subprocess.call(['open', filename])
-
