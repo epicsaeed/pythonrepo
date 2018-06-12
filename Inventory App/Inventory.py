@@ -1,7 +1,6 @@
 import sqlite3
 import ListOptions
-conn = sqlite3.connect('inventory.db')
-cursor = conn.cursor()
+
 
 #allows user to select input source
 source = input("Please select an input source\n1. Database\n2. Text file: ")
@@ -30,24 +29,24 @@ count = 0
 #sequence to import from Database
 if source == "DB":
     #sets up connection to local database
-    #conn = sqlite3.connect('inventory.db')
-    #cursor = conn.cursor()
+    conn = sqlite3.connect('inventory.db')
+    cursor = conn.cursor()
     ListOptions.createTable(cursor)#creates a table data if it doesn't exit
     ListOptions.readFromDB(productID,name,size,color,inStock,cursor)#read values in database  
+    print("inventory.db has been imported!")
     ListOptions.optionsDB(productID,name,size,color,inStock,cursor,conn)#lists options 
 #sequence to import from text file
 else:
-
     import ListOptions 
     from tkinter import Tk
     from tkinter.filedialog import askopenfilename
-
+    #checks if the DB already exists or no
     if ListOptions.ifDBExists():
         #DB exist so no need to read again.
         ListOptions.readFromDB(productID,name,size,color,inStock,cursor)#read values in database  
         ListOptions.optionsDB(productID,name,size,color,inStock,cursor,conn)
     else:   #this sequence is never executed as 'inventory.db' already exists
-        #squence if DB doesn't exist
+        #sequence if DB doesn't exist
         #shows a dialog window for user to select text file
         Tk().withdraw()
         path = askopenfilename() # show an "Open" dialog box and return the path to the selected file
@@ -56,6 +55,8 @@ else:
         with open(path,'r+') as f:
             inventory = list(f)
 
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
         ListOptions.setListMulti(inventory,productID,name,size,color,inStock)
         ListOptions.createTable(cursor)#creates a table data if it doesn't exit
         #adds items from text file to db(to be ran once)

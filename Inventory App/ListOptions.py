@@ -95,7 +95,7 @@ def readFromDB(productID,name,size,color,inStock,cursor):
 
 #creates a table if it does not exist
 def createTable(curser):
-    curser.execute('CREATE TABLE IF NOT EXISTS data(rowid INTEGER,productid INTEGER, name TEXT, size TEXT, color TEXT, instock INTEGER)')
+    curser.execute('CREATE TABLE IF NOT EXISTS data(productid INTEGER, name TEXT, size TEXT, color TEXT, instock INTEGER)')
 
 #used to add products into the database
 def addToDB(p,n,s,c,stock,cursor,conn):
