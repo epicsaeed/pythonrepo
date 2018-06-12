@@ -3,6 +3,10 @@ import os
 import sqlite3
 import time
 
+def Testing():
+    print("Testing is working")
+
+
 def ImportTXTorDB():
     x = input("Please select an option below:\n1. Import data from txt file.\n2. Import data from database: ")
     notValid = True
@@ -79,11 +83,11 @@ def searchDB(productID,name,size,color,inStock,cursor,conn):
 #reads all input in database
 def readFromDB(productID,name,size,color,inStock,cursor):
     #clears variablse
-    productID.clear()
-    name.clear()
-    size.clear()
-    color.clear()
-    inStock.clear()
+    # productID.clear()
+    # name.clear()
+    # size.clear()
+    # color.clear()
+    # inStock.clear()
     #fills up variables from DB
     cursor.execute('SELECT * FROM data')
     for row in cursor.fetchall():
