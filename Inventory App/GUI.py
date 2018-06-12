@@ -1,5 +1,6 @@
 #imports all tkinter methods
 from tkinter import *
+from tkinter import messagebox
 import ListOptions
 import sqlite3
 
@@ -18,82 +19,136 @@ ListOptions.createTable(cursor)#creates a table data if it doesn't exit
 ListOptions.readFromDB(productID,name,size,color,inStock,cursor)#read values in database  
 print("inventory.db has been imported!")
 
-#creates window object
-window = Tk()
-window.title("Inventory Manager")
+#displays details of item selected in scroll menu
+def viewDetails(N):
+    #clearing textfields
+    idEntry.delete(0,END)
+    nameEntry.delete(0,END)
+    sizeEntry.delete(0,END)
+    colorEntry.delete(0,END)
+    instockEntry.delete(0,END)
 
-def setUpMM():
-    #defining title lables id,name,size,color,instock
-    id = Label(window, text="Product ID")
-    id.grid(row=0,column=0)
+    #printing details
+    index = name.index(N)
+    idEntry.insert("end",productID[index])
+    nameEntry.insert("end",name[index])
+    sizeEntry.insert("end",size[index])
+    colorEntry.insert("end",color[index])
+    instockEntry.insert("end",inStock[index])
 
-    nameLbl = Label(window, text="Name")
-    nameLbl.grid(row=1,column=0)
-
-    sizeLbl = Label(window,text="Size")
-    sizeLbl.grid(row=0,column=2)
-
-    colorLbl = Label(window,text="color")
-    colorLbl.grid(row=1,column=2)
-
-    instockLbl = Label(window,text="Availablity")
-    instockLbl.grid(row=0,column=4)
-
-    #defining text fields of id,name,size,color,instock
-    id_field=StringVar()
-    idEntry=Entry(window,textvariable=id_field)
-    idEntry.grid(row=0,column=1)
-
-    name_field=StringVar()
-    nameEntry=Entry(window,textvariable=name_field)
-    nameEntry.grid(row=1,column=1)
-
-    size_field=StringVar()
-    sizeEntry=Entry(window,textvariable=size_field)
-    sizeEntry.grid(row=0,column=3)
-
-    color_field=StringVar()
-    colorEntry=Entry(window,textvariable=color_field)
-    colorEntry.grid(row=1,column=3)
-
-    instock_field=StringVar()
-    instockEntry=Entry(window,textvariable=instock_field)
-    instockEntry.grid(row=0,column=5)
-
-    #defining listbox
-    lbox = Listbox(window,height=6,width=50)
-    lbox.grid(row=3,column=0,rowspan=5,columnspan=4)
-
-    #attaching scrollbar
-    sbar=Scrollbar(window,orient=VERTICAL)
-    lbox['yscrollcommand'] = sbar.set
-    sbar['command'] = lbox.yview
-    sbar.grid(row=3,column=4,rowspan=4)
-
-    #defining buttons
-    createBtn=Button(window,text="Add Item",width=20)
-    createBtn.grid(row=1,column=5)
-
-    delBtn=Button(window,text="Delete Selected",width=20)
-    delBtn.grid(row=3,column=5)
-
-    editBtn=Button(window,text="Edit Selected",width=20)
-    editBtn.grid(row=4,column=5)
-
-    srchBtn=Button(window,text="Search",width=20)
-    srchBtn.grid(row=5,column=5)
-
-    xptBtn=Button(window,text="Export",width=20,command=lambda:ListOptions.exportList(productID,name,size,color,inStock))
-    xptBtn.grid(row=6,column=5)
-
-    exitBtn=Button(window,text="Exit",width=20,command=exit)
-    exitBtn.grid(row=7,column=5)
-
-    #adding values to list box
+#adding initial names to list box
+def addInitialNames():
     count = 0
     while count < len(productID):
         lbox.insert(END,name[count])
         count+=1
-    
-setUpMM()
+
+#search function
+def search():
+    SearchBar = Tk()
+    SearchBar.title("Search")
+    #search = StringVar()
+    srchEntry=Entry(SearchBar,textvariable=search)
+    srchEntry.grid(row=0,column=0,columnspan=4)
+    srchBtn = Button(SearchBar,text="Search",width=20,command=lambda:sAction(srchEntry.get()))
+    srchBtn.grid(row=1,column=0,columnspan=4)
+    SearchBar.mainloop()
+
+def sAction(v):
+    if v != "":
+        name = str(v)
+        found = []
+        count = 0
+        cursor.execute("SELECT * FROM data WHERE name LIKE ?",('%'+name+'%',))
+        print("Results found for '",name,"': ")
+        #adds all search results to a list 'found'
+        for row in cursor.fetchall():
+            found.append(row)
+        if len(found) == 0:
+            print("No elements found.")
+            return None
+        else:
+            #prints search results
+            print(len(found)," item/s found.")
+            print("No.\tName\t\tProduct ID")
+            while count < len(found):
+                print(count+1,"\t",found[count][1].ljust(10),"\t",found[count][0])
+                count+=1
+    else:
+        messagebox.showerror("Error", "Please enter a value")
+
+#creates window object
+window = Tk()
+window.title("Inventory Manager")
+
+#defining title lables id,name,size,color,instock
+id = Label(window, text="Product ID")
+id.grid(row=0,column=0)
+
+nameLbl = Label(window, text="Name")
+nameLbl.grid(row=1,column=0)
+
+sizeLbl = Label(window,text="Size")
+sizeLbl.grid(row=0,column=2)
+
+colorLbl = Label(window,text="color")
+colorLbl.grid(row=1,column=2)
+
+instockLbl = Label(window,text="Availablity")
+instockLbl.grid(row=0,column=4)
+
+#defining text fields of id,name,size,color,instock
+id_field=StringVar()
+idEntry=Entry(window,textvariable=id_field)
+idEntry.grid(row=0,column=1)
+
+name_field=StringVar()
+nameEntry=Entry(window,textvariable=name_field)
+nameEntry.grid(row=1,column=1)
+
+size_field=StringVar()
+sizeEntry=Entry(window,textvariable=size_field)
+sizeEntry.grid(row=0,column=3)
+
+color_field=StringVar()
+colorEntry=Entry(window,textvariable=color_field)
+colorEntry.grid(row=1,column=3)
+
+instock_field=StringVar()
+instockEntry=Entry(window,textvariable=instock_field)
+instockEntry.grid(row=0,column=5)
+
+#defining listbox
+lbox = Listbox(window,height=6,width=50)
+lbox.grid(row=3,column=0,rowspan=5,columnspan=4)
+addInitialNames()
+
+#attaching scrollbar
+sbar=Scrollbar(window,orient=VERTICAL)
+lbox['yscrollcommand'] = sbar.set
+sbar['command'] = lbox.yview
+sbar.grid(row=3,column=4,rowspan=4)
+
+#defining buttons
+viewBtn=Button(window,text="View Details",width=20,command=lambda:viewDetails(lbox.get(ANCHOR)))
+viewBtn.grid(row=1,column=5)
+
+delBtn=Button(window,text="Delete Selected",width=20)
+delBtn.grid(row=3,column=5)
+
+editBtn=Button(window,text="Edit Selected",width=20)
+editBtn.grid(row=4,column=5)
+
+srchBtn=Button(window,text="Search",width=20,command=lambda:search())
+srchBtn.grid(row=5,column=5)
+
+xptBtn=Button(window,text="Export",width=20,command=lambda:ListOptions.exportList(productID,name,size,color,inStock))
+xptBtn.grid(row=6,column=5)
+
+exitBtn=Button(window,text="Exit",width=20,command=exit)
+exitBtn.grid(row=7,column=5)
+
 window.mainloop()
+
+
+
