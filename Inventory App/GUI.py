@@ -1,6 +1,7 @@
 #imports all tkinter methods
 from tkinter import *
 from tkinter import messagebox
+from tkinter import ttk
 import ListOptions
 import sqlite3
 
@@ -19,6 +20,74 @@ ListOptions.createTable(cursor)#creates a table data if it doesn't exit
 ListOptions.readFromDB(productID,name,size,color,inStock,cursor)#read values in database  
 print("inventory.db has been imported!")
 
+
+
+def addWindow():
+    addwin= Tk()
+    addwin.title("Add Item")
+
+    #setting up labels
+    name = Label(addwin, text="NAME")
+    name.grid(row=0,column=0)
+
+    id = Label(addwin, text="PRODUCT ID")
+    id.grid(row=1,column=0)
+
+    sizeLbl = Label(addwin,text="SIZE")
+    sizeLbl.grid(row=2,column=0)
+
+    colorLbl = Label(addwin,text="COLOR")
+    colorLbl.grid(row=3,column=0)
+
+    instockLbl = Label(addwin,text="AVAILABILITY")
+    instockLbl.grid(row=4,column=0)
+
+    #setting up text fields
+    name_field=StringVar()
+    nameEntry=Entry(addwin,textvariable=name_field)
+    nameEntry.grid(row=0,column=1)
+
+    id_field=StringVar()
+    idEntry=Entry(addwin,textvariable=id_field)
+    idEntry.grid(row=1,column=1)
+
+    size_field=StringVar()
+    sizeEntry=Entry(addwin,textvariable=size_field)
+    sizeEntry.grid(row=2,column=1)
+
+    color_field=StringVar()
+    colorEntry=Entry(addwin,textvariable=color_field)
+    colorEntry.grid(row=3,column=1)
+
+    instock_field=StringVar()
+    instockEntry=Entry(addwin,textvariable=instock_field)
+    instockEntry.grid(row=4,column=1)
+
+    #set up button
+    aBtn = Button(addwin,text="Add Item",width=30,command=lambda:Add(nameEntry.get(),idEntry.get(),sizeEntry.get(),colorEntry.get(),instockEntry.get(),addwin))
+    aBtn.grid(row=5,column=0,columnspan=4)
+
+    addwin.mainloop()
+
+#clears text fields
+def clear():
+    #enabling textfields for writing
+    idEntry.configure(state="normal")
+    sizeEntry.configure(state="normal")
+    colorEntry.configure(state="normal")
+    instockEntry.configure(state="normal")
+
+    idEntry.delete(0,END)
+    sizeEntry.delete(0,END)
+    colorEntry.delete(0,END)
+    instockEntry.delete(0,END)
+
+    #disabling textfields for writing
+    idEntry.configure(state="readonly")
+    sizeEntry.configure(state="readonly")
+    colorEntry.configure(state="readonly")
+    instockEntry.configure(state="readonly")
+
 #attaches multiple functions to one button
 def combine_funcs(*funcs):
     def combined_func(*args, **kwargs):
@@ -26,60 +95,59 @@ def combine_funcs(*funcs):
             f(*args, **kwargs)
     return combined_func
 
-#adds item:
-def addItem():
-    id = idEntry.get()
+def Add(n,ID,s,c,instock,win):
     notValid = True
-    #checks if product ID is invalid (must be 7 digits)
-    while notValid:
-        if len(id) == 7 and id.isdigit():
-            if int(id) in productID:
-                messagebox.showerror("Duplicate", "Item already exists")
-                return None
-            productID.append(id)
-            notValid = False
+    if len(ID) == 7 and ID.isdigit():
+        if int(ID) in productID:
+            messagebox.showerror("Duplicate", "Item already exists")
+            win.destroy()
+        elif n in name:
+            messagebox.showerror("Duplicate", "Item of this name already exists")
+            win.destroy()
+        elif instock=="":
+            messagebox.showerror("Error", "Please enter a value for availability")
+            win.destroy()
         else:
-            messagebox.showerror("Error", "Product ID must be 7 digits.")
-
-    n = nameEntry.get()
-    if n == "":
-        n = "N/A"
-        name.append("N/A")
+            notValid = False
     else:
+        messagebox.showerror("Error", "Product ID must be 7 digits")
+        win.destroy()
+        
+    if n=="":
+        n="N/A"
+
+    if s=="":
+        s="N/A"
+
+    if c=="":
+        c="N/A"
+    if not notValid:
+        #add to boxlist
+        lbox.insert(END,n)
+
+        #add details to variables
+        productID.append(ID)
         name.append(n)
-
-    #item size input field
-    s = sizeEntry.get()
-    if s == "":
-        s = "N/A"
-        size.append("N/A")
-    else:
         size.append(s)
-
-    c = colorEntry.get()
-    if c == "":
-        c = "N/A"
-        color.append("N/A")
-    else:
         color.append(c)
+        inStock.append(instock)
 
-    iS = instockEntry.get()
-    notValid = True
-    while notValid:
-        if iS.isdigit():
-            inStock.append(iS)
-            notValid = False
-        else:
-            messagebox.showerror("Availability Error", "Please enter a number")
-    ListOptions.addToDB(productID,name,size,color,inStock,cursor,conn)
-    print("Item has been added.")
-    messagebox.showerror("Done", "Item has been added")
+        #add to DB
+        ListOptions.addToDB(ID,n,s,c,instock,cursor,conn)
+        messagebox.showerror("Done", "Item has been added")
+        win.destroy()
 
 #displays details of item selected in scroll menu
 def viewDetails(N):
+
+    #enabling textfields for writing
+    idEntry.configure(state="normal")
+    sizeEntry.configure(state="normal")
+    colorEntry.configure(state="normal")
+    instockEntry.configure(state="normal")
+
     #clearing textfields
     idEntry.delete(0,END)
-    nameEntry.delete(0,END)
     sizeEntry.delete(0,END)
     colorEntry.delete(0,END)
     instockEntry.delete(0,END)
@@ -87,10 +155,15 @@ def viewDetails(N):
     #printing details
     index = name.index(N)
     idEntry.insert("end",productID[index])
-    nameEntry.insert("end",name[index])
     sizeEntry.insert("end",size[index])
     colorEntry.insert("end",color[index])
     instockEntry.insert("end",inStock[index])
+
+    #disabling textfields for writing
+    idEntry.configure(state="readonly")
+    sizeEntry.configure(state="readonly")
+    colorEntry.configure(state="readonly")
+    instockEntry.configure(state="readonly")
 
 #adding initial names to list box
 def addInitialNames():
@@ -98,8 +171,10 @@ def addInitialNames():
     while count < len(productID):
         lbox.insert(END,name[count])
         count+=1
+    s = str(len(name)) + " Items have been imported from inventory.db"
+    messagebox.showerror("Import",s)
 
-#search function
+#search window
 def search():
     SearchBar = Tk()
     SearchBar.title("Search")
@@ -116,6 +191,7 @@ def search():
     exitBtn.grid(row=8,column=0,columnspan=4)
     SearchBar.mainloop()
 
+#search logic
 def sAction(v,srchBox):
     if v != "":
         srchBox.delete('0','end')
@@ -141,48 +217,46 @@ def sAction(v,srchBox):
 
 #creates window object
 window = Tk()
-window.title("Inventory Manager")
+window.title("INVENTORY MANAGER")
+
 
 #defining title lables id,name,size,color,instock
-id = Label(window, text="Product ID")
+id = Label(window, text="PRODUCT ID")
 id.grid(row=0,column=0)
 
-nameLbl = Label(window, text="Name")
-nameLbl.grid(row=1,column=0)
-
-sizeLbl = Label(window,text="Size")
+sizeLbl = Label(window,text="SIZE")
 sizeLbl.grid(row=0,column=2)
 
-colorLbl = Label(window,text="color")
+colorLbl = Label(window,text="COLOR")
 colorLbl.grid(row=1,column=2)
 
-instockLbl = Label(window,text="Availablity")
-instockLbl.grid(row=0,column=4)
+instockLbl = Label(window,text="AVAILABILITY")
+instockLbl.grid(row=1,column=0)
 
 #defining text fields of id,name,size,color,instock
 id_field=StringVar()
 idEntry=Entry(window,textvariable=id_field)
 idEntry.grid(row=0,column=1)
-
-name_field=StringVar()
-nameEntry=Entry(window,textvariable=name_field)
-nameEntry.grid(row=1,column=1)
+idEntry.configure(state="readonly")
 
 size_field=StringVar()
 sizeEntry=Entry(window,textvariable=size_field)
 sizeEntry.grid(row=0,column=3)
+sizeEntry.configure(state="readonly")
 
 color_field=StringVar()
 colorEntry=Entry(window,textvariable=color_field)
 colorEntry.grid(row=1,column=3)
+colorEntry.configure(state="readonly")
 
 instock_field=StringVar()
 instockEntry=Entry(window,textvariable=instock_field)
-instockEntry.grid(row=0,column=5)
+instockEntry.grid(row=1,column=1)
+instockEntry.configure(state="readonly")
 
 #defining listbox
 lbox = Listbox(window,height=6,width=50)
-lbox.grid(row=3,column=0,rowspan=5,columnspan=4)
+lbox.grid(row=3,column=0,rowspan=7,columnspan=4)
 addInitialNames()
 
 #attaching scrollbar
@@ -192,8 +266,11 @@ sbar['command'] = lbox.yview
 sbar.grid(row=3,column=4,rowspan=4)
 
 #defining buttons
-addBtn=Button(window,text="Add new Item",width=20,command=lambda:addBtn)
-addBtn.grid(row=1,column=5)
+clrBtn=Button(window,text="Clear Fields",width=20,command=lambda:clear())
+clrBtn.grid(row=1,column=5)
+
+addBtn=Button(window,text="Add new Item",width=20,command=lambda:addWindow())
+addBtn.grid(row=0,column=5)
 
 viewBtn=Button(window,text="View Details",width=20,command=lambda:viewDetails(lbox.get(ANCHOR)))
 viewBtn.grid(row=2,column=5)
