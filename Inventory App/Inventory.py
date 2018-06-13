@@ -1,7 +1,6 @@
 import sqlite3
 import ListOptions
 
-
 #allows user to select input source
 source = input("Please select an input source\n1. Database\n2. Text file: ")
 notValid = True

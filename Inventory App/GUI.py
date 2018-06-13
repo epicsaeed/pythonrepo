@@ -19,6 +19,62 @@ ListOptions.createTable(cursor)#creates a table data if it doesn't exit
 ListOptions.readFromDB(productID,name,size,color,inStock,cursor)#read values in database  
 print("inventory.db has been imported!")
 
+#attaches multiple functions to one button
+def combine_funcs(*funcs):
+    def combined_func(*args, **kwargs):
+        for f in funcs:
+            f(*args, **kwargs)
+    return combined_func
+
+#adds item:
+def addItem():
+    id = idEntry.get()
+    notValid = True
+    #checks if product ID is invalid (must be 7 digits)
+    while notValid:
+        if len(id) == 7 and id.isdigit():
+            if int(id) in productID:
+                messagebox.showerror("Duplicate", "Item already exists")
+                return None
+            productID.append(id)
+            notValid = False
+        else:
+            messagebox.showerror("Error", "Product ID must be 7 digits.")
+
+    n = nameEntry.get()
+    if n == "":
+        n = "N/A"
+        name.append("N/A")
+    else:
+        name.append(n)
+
+    #item size input field
+    s = sizeEntry.get()
+    if s == "":
+        s = "N/A"
+        size.append("N/A")
+    else:
+        size.append(s)
+
+    c = colorEntry.get()
+    if c == "":
+        c = "N/A"
+        color.append("N/A")
+    else:
+        color.append(c)
+
+    iS = instockEntry.get()
+    notValid = True
+    while notValid:
+        if iS.isdigit():
+            inStock.append(iS)
+            notValid = False
+        else:
+            messagebox.showerror("Availability Error", "Please enter a number")
+    ListOptions.addToDB(productID,name,size,color,inStock,cursor,conn)
+    print("Item has been added.")
+    messagebox.showerror("Done", "Item has been added")
+
 #displays details of item selected in scroll menu
 def viewDetails(N):
     #clearing textfields
@@ -47,32 +103,38 @@ def addInitialNames():
 def search():
     SearchBar = Tk()
     SearchBar.title("Search")
+    srchBox = Listbox(SearchBar,height=6,width=25)
+    srchBox.grid(row=3,column=0,rowspan=4)
     #search = StringVar()
     srchEntry=Entry(SearchBar,textvariable=search)
     srchEntry.grid(row=0,column=0,columnspan=4)
-    srchBtn = Button(SearchBar,text="Search",width=20,command=lambda:sAction(srchEntry.get()))
+    srchBtn = Button(SearchBar,text="Search",width=20,command=lambda:sAction(srchEntry.get(),srchBox))
     srchBtn.grid(row=1,column=0,columnspan=4)
+    vBtn = Button(SearchBar,text="View Details",width=20,command=lambda:viewDetails(srchBox.get(ANCHOR)))
+    vBtn.grid(row=2,column=0,columnspan=4)
+    exitBtn = Button(SearchBar,text="Close",width=20,command=lambda:SearchBar.destroy())
+    exitBtn.grid(row=8,column=0,columnspan=4)
     SearchBar.mainloop()
 
-def sAction(v):
+def sAction(v,srchBox):
     if v != "":
+        srchBox.delete('0','end')
         name = str(v)
         found = []
         count = 0
         cursor.execute("SELECT * FROM data WHERE name LIKE ?",('%'+name+'%',))
-        print("Results found for '",name,"': ")
+        #print("Results found for '",name,"': ")
         #adds all search results to a list 'found'
         for row in cursor.fetchall():
             found.append(row)
         if len(found) == 0:
-            print("No elements found.")
+            srchBox.insert(END,"No Elements Found.")
             return None
         else:
             #prints search results
-            print(len(found)," item/s found.")
-            print("No.\tName\t\tProduct ID")
+            srchBox.insert(END,"Results Found:")
             while count < len(found):
-                print(count+1,"\t",found[count][1].ljust(10),"\t",found[count][0])
+                srchBox.insert(END,found[count][1])
                 count+=1
     else:
         messagebox.showerror("Error", "Please enter a value")
@@ -130,8 +192,11 @@ sbar['command'] = lbox.yview
 sbar.grid(row=3,column=4,rowspan=4)
 
 #defining buttons
+addBtn=Button(window,text="Add new Item",width=20,command=lambda:addBtn)
+addBtn.grid(row=1,column=5)
+
 viewBtn=Button(window,text="View Details",width=20,command=lambda:viewDetails(lbox.get(ANCHOR)))
-viewBtn.grid(row=1,column=5)
+viewBtn.grid(row=2,column=5)
 
 delBtn=Button(window,text="Delete Selected",width=20)
 delBtn.grid(row=3,column=5)
