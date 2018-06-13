@@ -20,7 +20,24 @@ ListOptions.createTable(cursor)#creates a table data if it doesn't exit
 ListOptions.readFromDB(productID,name,size,color,inStock,cursor)#read values in database  
 print("inventory.db has been imported!")
 
+def delete(lbox):
+    index = name.index(lbox.get(ANCHOR))
+    ID = productID[index]
+    s = str(name[index]) + " has been deleted."
+    #Delete from boxlist
+    lbox.delete(ANCHOR)
 
+    #delete from variables
+    del productID[index]
+    del name[index]
+    del size[index]
+    del color[index]
+    del inStock[index]
+
+    #delete fro DB
+    ListOptions.removeFromDB(ID,cursor,conn)
+    
+    messagebox.showerror("Delete",s)
 
 def addWindow():
     addwin= Tk()
@@ -215,6 +232,49 @@ def sAction(v,srchBox):
     else:
         messagebox.showerror("Error", "Please enter a value")
 
+def EditWin(selectedItem):
+    
+    i = name.index(selectedItem)
+
+    editWin = Tk()
+    editWin.title("Edit Item")
+
+    NameLbl = Label(editWin,text="Name:")
+    NameLbl.grid(row=0,column=0)
+
+    name_field=StringVar()
+    NameEntry = Entry(editWin,textvariable=name_field)
+    NameEntry.grid(row=0,column=1)
+    NameEntry.insert(END,selectedItem)
+    
+
+    editLbl = Label(editWin,text="Availability:")
+    editLbl.grid(row=1,column=0)
+
+    edit_field=StringVar()
+    editEntry = Entry(editWin,textvariable=edit_field)
+    editEntry.grid(row=1,column=1)
+
+    EditBtn = Button(editWin,text="Apply Changes",command=lambda:Edit(i,editEntry))
+    EditBtn.grid(row=2,column=0,columnspan=2)
+
+    NameEntry.configure(state="disabled")    
+    
+def Edit(i,editEntry):
+    
+    new = int(editEntry.get())
+    old = inStock[i]
+
+    #edit in variables
+    inStock[i]=new
+
+    #edit in DB
+    ListOptions.editInDB(old,new,productID[i],cursor,conn)
+
+    messagebox.showerror("Done", "Item has been Edited")
+
+
+
 #creates window object
 window = Tk()
 window.title("INVENTORY MANAGER")
@@ -275,10 +335,10 @@ addBtn.grid(row=0,column=5)
 viewBtn=Button(window,text="View Details",width=20,command=lambda:viewDetails(lbox.get(ANCHOR)))
 viewBtn.grid(row=2,column=5)
 
-delBtn=Button(window,text="Delete Selected",width=20)
+delBtn=Button(window,text="Delete Selected",width=20,command=lambda:delete(lbox))
 delBtn.grid(row=3,column=5)
 
-editBtn=Button(window,text="Edit Selected",width=20)
+editBtn=Button(window,text="Edit Selected",width=20,command=lambda:EditWin(lbox.get(ANCHOR)))
 editBtn.grid(row=4,column=5)
 
 srchBtn=Button(window,text="Search",width=20,command=lambda:search())
