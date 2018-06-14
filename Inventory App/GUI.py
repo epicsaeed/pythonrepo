@@ -113,7 +113,7 @@ def combine_funcs(*funcs):
     return combined_func
 
 def Add(n,ID,s,c,instock,win):
-    notValid = True
+    Valid = True
     if len(ID) == 7 and ID.isdigit():
         if int(ID) in productID:
             messagebox.showerror("Duplicate", "Item already exists")
@@ -125,7 +125,7 @@ def Add(n,ID,s,c,instock,win):
             messagebox.showerror("Error", "Please enter a value for availability")
             win.destroy()
         else:
-            notValid = False
+            Valid = False
     else:
         messagebox.showerror("Error", "Product ID must be 7 digits")
         win.destroy()
@@ -138,7 +138,7 @@ def Add(n,ID,s,c,instock,win):
 
     if c=="":
         c="N/A"
-    if not notValid:
+    if Valid:
         #add to boxlist
         lbox.insert(END,n)
 
@@ -270,10 +270,7 @@ def Edit(i,editEntry):
 
     #edit in DB
     ListOptions.editInDB(old,new,productID[i],cursor,conn)
-
     messagebox.showerror("Done", "Item has been Edited")
-
-
 
 #creates window object
 window = Tk()

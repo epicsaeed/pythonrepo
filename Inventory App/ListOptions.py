@@ -105,8 +105,6 @@ def createTable(curser):
 def addToDB(p,n,s,c,stock,cursor,conn):
     cursor.execute("INSERT INTO data VALUES(:productid,:name,:size,:color,:instock)",{'productid':p,'name':n,'size':s,'color':c,'instock':stock})
     conn.commit()
-    # cursor.close()
-    # conn.close()
 
 #removed item of passed Product ID
 def removeFromDB(p,cursor,conn):
