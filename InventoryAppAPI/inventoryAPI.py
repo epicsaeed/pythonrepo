@@ -22,9 +22,8 @@ def api_all():
 #displays details of specific id, deletes a product, updates a product
 @app.route('/products/<int:id>',methods=['POST','GET','DELETE'])
 def api_product(id):
-    #displays details of passed product id
     if request.method == 'GET':
-
+        #displays details of passed product id
         query = "SELECT * FROM data WHERE productid=%s;"%id
 
         conn = sqlite3.connect('inventory.db')
@@ -37,10 +36,8 @@ def api_product(id):
             return jsonify(),404
         else:
             return jsonify(result)
-
-    #updates details of passed product id
     elif request.method == 'POST':
-        
+        #updates details of passed product id
         payload = request.get_json()
 
         #initiates database
@@ -77,22 +74,20 @@ def api_product(id):
         #conn.close()
 
         return "Product has been updated", 200
-    #deletes item of passed product id
     elif request.method == 'DELETE':
-
+        #deletes item of passed product id
         conn = sqlite3.connect('inventory.db')
         cur = conn.cursor()
-        exist = []
-        #checks if the pid exists in DB and returns a conflict error status code
-        cur.execute("SELECT * FROM data WHERE productid LIKE ?",(id,))
-        for row in cur.fetchall():
-            exist.append(row)
-            if not exist:
-                return jsonify(), 404
-            else:
-                cur.execute("DELETE FROM data WHERE  productid =?",(id,))
-                conn.commit()
-                return jsonify(),200
+
+        #checks if the pid exists in DB and returns 404 if not
+        cur.execute("SELECT * FROM data WHERE productid = ?",(id,))
+        data = cur.fetchall()
+        if len(data) == 0:
+            return jsonify(), 404
+        else:
+            cur.execute("DELETE FROM data WHERE productid =?",(id,))
+            conn.commit()
+            return jsonify(),200
     else:
         return jsonify(),404
 
