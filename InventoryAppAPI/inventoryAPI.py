@@ -40,40 +40,48 @@ def api_product(id):
         #updates details of passed product id
         payload = request.get_json()
 
+        if not payload:
+            print("empty payload")
+            return jsonify(),404
+
         #initiates database
         conn = sqlite3.connect('inventory.db')
         cur = conn.cursor()
 
         if "name" in payload:
             name = payload['name'] 
+            if not name:
+                name = "N/A"
             query = "UPDATE data SET name =? WHERE productid=?"
             cur.execute(query,(name,id))
             conn.commit()
 
         if "size" in payload:
             size = payload['size']
+            if not size:
+                size = "N/A"
             query = "UPDATE data SET size =? WHERE productid=?"
             cur.execute(query,(size,id))
             conn.commit()
 
         if "color" in payload:
             color = payload['color']
+            if not color:
+                color = "N/A"
             query = "UPDATE data SET color =? WHERE productid=?"
             cur.execute(query,(color,id))
             conn.commit()
 
         if "in_stock" in payload:
-            instock = payload['in_stock']
+            instock = str(payload['in_stock'])
+            if not instock.isdigit() or not instock:
+                print("instock is invalid")
+                return jsonify(),404
             query = "UPDATE data SET instock =? WHERE productid=?"
-            cur.execute(query,(instock,id))
+            cur.execute(query,(payload['in_stock'],id))
             conn.commit()
-        
-        if ('name' and 'size' and 'color' and 'in_stock') not in payload:
-            return jsonify(),404
 
-        #conn.close()
-
-        return "Product has been updated", 200
+        return jsonify(),200
     elif request.method == 'DELETE':
         #deletes item of passed product id
         conn = sqlite3.connect('inventory.db')
@@ -90,7 +98,6 @@ def api_product(id):
             return jsonify(),200
     else:
         return jsonify(),404
-
 
 @app.route('/products/add',methods=['PUT'])
 def api_add():
@@ -125,24 +132,6 @@ def api_add():
     else:
         color = "N/A"
 
-    # #checks if pid or availability is not based in json paylad
-    # if ('product_id' and 'in_stock') not in payload:
-    #     return jsonify(),404
-    # #checks if product id is invalid
-    # elif not payload['product_id'] or len(payload['product_id']) != 7 or not payload['product_id'].isdigit():
-    #     return jsonify(),404
-    # #checks if availability is invalid
-    # elif not payload['in_stock'] or not payload['in_stock'].isdigit():
-    #     return jsonify(),404
-    # else:
-    #     pid = payload['product_id']
-    #     instock = payload['in_stock']
-    #     name = payload['name']
-    #     size = payload['size']
-    #     color = payload['color']
-
-    # if not pid:
-
     conn = sqlite3.connect('inventory.db')
     cur = conn.cursor()
     found = []
@@ -158,6 +147,5 @@ def api_add():
     conn.commit()
 
     return  jsonify(),200
-
 
 app.run(port=9214,debug=True)
