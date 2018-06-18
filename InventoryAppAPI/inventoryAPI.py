@@ -3,11 +3,6 @@ import sqlite3
 
 app = Flask(__name__)
 
-#returns a 404 HTTP status code 
-@app.errorhandler(404)
-def page_not_found(e):
-    return "<h1>404</h1><p>The resource could not be found.</p>", 404
-
 #returns items from the database as dictioaries
 def dict_factory(cursor,row):
     d = {}
@@ -16,12 +11,12 @@ def dict_factory(cursor,row):
     return d
 
 #routes to the home page of the server
-@app.route('/',methods=['GET'])
-def main():
-    return "<h1>Inventory App</h1><p>This is a web server for inventory.</p>"
+# @app.route('/',methods=['GET'])
+# def main():
+#     return "<h1>Inventory App</h1><p>This is a web server for inventory.</p>"
 
 #displays all products in the database
-@app.route('/products',methods=['GET'])
+@app.route('/products/',methods=['GET'])
 def api_all():
     conn = sqlite3.connect('inventory.db')
     conn.row_factory = dict_factory
@@ -29,8 +24,10 @@ def api_all():
     all_products = cur.execute('SELECT * FROM data').fetchall()
     return jsonify(all_products)
 
-@app.route('/products/<int:id>',methods=['POST','GET'])
+#displays details of specific id, deletes a product, updates a product
+@app.route('/products/<int:id>',methods=['POST','GET','DELETE'])
 def api_product(id):
+    #displays details of passed product id
     if request.method == 'GET':
 
         query = "SELECT * FROM data WHERE productid=%s;"%id
@@ -42,50 +39,62 @@ def api_product(id):
         result = cur.execute(query).fetchall()
         
         if not result:
-            return page_not_found(404)
+            return jsonify(),404
         else:
             return jsonify(result)
-    else:
+
+    #updates details of passed product id
+    elif request.method == 'POST':
         
         payload = request.get_json()
-        to_filter = []
 
-        #UPDATE data SET name AND
-        query = "UPDATE data SET"
+        #initiates database
+        conn = sqlite3.connect('inventory.db')
+        cur = conn.cursor()
 
+        if "name" in payload:
+            name = payload['name'] 
+            query = "UPDATE data SET name =? WHERE productid=?"
+            cur.execute(query,(name,id))
+            conn.commit()
 
-        if 'name' in payload:
-            query+= ' name=? AND'
-            to_filter.append(payload['name'])
+        if "size" in payload:
+            size = payload['size']
+            query = "UPDATE data SET size =? WHERE productid=?"
+            cur.execute(query,(size,id))
+            conn.commit()
 
-        if 'size' in payload:
-            query+= ' size=? AND'
-            to_filter.append(payload['size'])
+        if "color" in payload:
+            color = payload['color']
+            query = "UPDATE data SET color =? WHERE productid=?"
+            cur.execute(query,(color,id))
+            conn.commit()
 
-        if 'color' in payload:
-            query+= ' color=? AND'
-            to_filter.append(payload['color'])
-
-        if 'in_stock' in payload:
-            query+= ' instock=? AND'
-            to_filter.append(payload['in_stock'])
+        if "in_stock" in payload:
+            instock = payload['in_stock']
+            query = "UPDATE data SET instock =? WHERE productid=?"
+            cur.execute(query,(instock,id))
+            conn.commit()
         
         if ('name' and 'size' and 'color' and 'in_stock') not in payload:
-            return page_not_found(404)
+            return jsonify(),404
 
-        query = query[:-4] + ' WHERE productid=?'
+        conn.close()
 
-        to_filter.append(id)
-        print(query)
-        print(to_filter)
         return "Product has been updated", 200
+    #deletes item of passed product id
+    elif request.method == 'DELETE':
 
-        # conn = sqlite3.connect('inventory.db')
-        # cur = conn.cursor()
-        # cur.execute(query,to_filter)
+        conn = sqlite3.connect('inventory.db')
+        cur = conn.cursor()
+        cur.execute("DELETE FROM data WHERE  productid =?",(id,))
+        conn.commit()
+        conn.close()
 
+        return jsonify(),200
 
-
+    else:
+        return 405
 
 
 @app.route('/products/add',methods=['PUT'])
@@ -103,7 +112,7 @@ def api_add():
     cur.execute("INSERT INTO data VALUES(:productid,:name,:size,:color,:instock)",{'productid':pid,'name':name,'size':size,'color':color,'instock':instock})
     conn.commit()
 
-    return "Product has been added", 200
+    return  jsonify(),200
 
 
 app.run(port=9214,debug=True)
