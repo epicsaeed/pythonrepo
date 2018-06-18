@@ -40,14 +40,19 @@ def api_product(id):
         #updates details of passed product id
         payload = request.get_json()
 
+        #cheks if payload is empty
         if not payload:
             print("empty payload")
+            return jsonify(),404
+        
+        if ("name" or "size" or "color" or "in_stock" ) not in payload:
             return jsonify(),404
 
         #initiates database
         conn = sqlite3.connect('inventory.db')
         cur = conn.cursor()
 
+        #checks for parameteres passed in the json payload
         if "name" in payload:
             name = payload['name'] 
             if not name:
