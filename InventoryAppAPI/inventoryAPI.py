@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import sqlite3
+import sqlite3, ParameterMethods
 
 app = Flask(__name__)
 
@@ -10,25 +10,6 @@ def dict_factory(cursor,row):
         d[col[0]] = row[idx]
     return d
 
-#returns true if product ID is valid
-def check_id(id):
-    id = str(id)
-    if id.isdigit():
-        if len(id) == 7:
-            return True
-    return False
-
-#checks if in_stock is valid
-def check_stock(instock):
-    if str(instock).isdigit():
-        return True
-    return False
-
-#checks if the passed parameters are valid and returns true if so
-def check_POST_json(payload):
-    if ("name" or "size" or "color" or "in_stock") not in payload:
-        return False
-    return True
 
 #displays all products in the database
 @app.route('/products/',methods=['GET'])
@@ -44,7 +25,7 @@ def api_all():
 def api_product(id):
 
     #checks if the passed product ID is
-    if check_id(id):
+    if ParameterMethods.check_id(id):
         pass
     else:
         return jsonify(),400
@@ -70,7 +51,7 @@ def api_product(id):
             return jsonify(),400
             
         #returns a 400 if no known parameters are given
-        if not check_POST_json(payload):
+        if not ParameterMethods.check_POST_json(payload):
             print("checking payload")
             return jsonify(),400
 
@@ -113,8 +94,6 @@ def api_product(id):
         return jsonify(),200
     elif request.method == 'DELETE':
         #deletes item of passed product id
-        conn = sqlite3.connect('inventory.db')
-        cur = conn.cursor()
 
         #checks if the pid exists in DB and returns 404 if not
         cur.execute("SELECT * FROM data WHERE productid = ?",(id,))
@@ -132,9 +111,16 @@ def api_product(id):
 @app.route('/products/add',methods=['PUT'])
 def api_add():
     payload = request.get_json()
+    details = {"name":"","product_id":"","size":"","color":"","in_stock":""}
+
+    if ParameterMethods.check_PUT_json(payload):
+        pass
+    else:
+        return jsonify(),400
 
     if "product_id" in payload:
         pid = str(payload['product_id'])
+        details["product_id"]=pid
         print(pid)
         if not pid.isdigit() or len(pid) != 7:
             return jsonify(),404
@@ -143,6 +129,7 @@ def api_add():
 
     if "in_stock" in payload:
         instock = str(payload['in_stock'])
+        details["in_stock"]=instock
         if not instock.isdigit() or not instock:
             return jsonify(),404
     else:
@@ -169,11 +156,14 @@ def api_add():
     else:
         color = "N/A"
 
+    details["name"]=name
+    details["color"]=color
+    details["size"]=size
+
     conn = sqlite3.connect('inventory.db')
     cur = conn.cursor()
     found = []
-
-    #checks if the pid exists in DB and returns a conflict error status code
+       #checks if the pid exists in DB and returns a conflict error status code
     cur.execute("SELECT * FROM data WHERE productid LIKE ?",(pid,))
     for row in cur.fetchall():
         found.append(row)
@@ -183,6 +173,6 @@ def api_add():
     cur.execute("INSERT INTO data VALUES(:productid,:name,:size,:color,:instock)",{'productid':pid,'name':name,'size':size,'color':color,'instock':instock})
     conn.commit()
 
-    return  jsonify(),200
+    return jsonify(details),200
 
 app.run(port=9214,debug=True)
