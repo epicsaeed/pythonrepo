@@ -10,6 +10,9 @@ print ("Opened database successfully")
 # print ("Table created successfully")
 conn.close()
 
+
+
+
 #routes to the main page
 @app.route('/')
 def home():
