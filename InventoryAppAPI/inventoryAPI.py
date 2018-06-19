@@ -3,6 +3,7 @@ import sqlite3
 
 app = Flask(__name__)
 
+
 #returns items from the database as dictioaries
 def dict_factory(cursor,row):
     d = {}
@@ -40,12 +41,10 @@ def api_product(id):
         #updates details of passed product id
         payload = request.get_json()
 
-        #cheks if payload is empty
+        print(jsonify(payload))
+        #checks if payload is empty
         if not payload:
-            print("empty payload")
-            return jsonify(),404
-        
-        if ("name" or "size" or "color" or "in_stock" ) not in payload:
+            print("empty payload")#         testing
             return jsonify(),404
 
         #initiates database
@@ -54,12 +53,15 @@ def api_product(id):
 
         #checks for parameteres passed in the json payload
         if "name" in payload:
+            print("name in payload")#         testing
             name = payload['name'] 
             if not name:
+                print("but name is empty so it will be null")#         testing
                 name = "N/A"
             query = "UPDATE data SET name =? WHERE productid=?"
             cur.execute(query,(name,id))
             conn.commit()
+            print("commited name")
 
         if "size" in payload:
             size = payload['size']
@@ -86,6 +88,7 @@ def api_product(id):
             cur.execute(query,(payload['in_stock'],id))
             conn.commit()
 
+        conn.close()
         return jsonify(),200
     elif request.method == 'DELETE':
         #deletes item of passed product id
@@ -102,6 +105,7 @@ def api_product(id):
             conn.commit()
             return jsonify(),200
     else:
+        #return NOT FOUND if mehtod is not of the above.
         return jsonify(),404
 
 @app.route('/products/add',methods=['PUT'])
@@ -110,6 +114,7 @@ def api_add():
 
     if "product_id" in payload:
         pid = str(payload['product_id'])
+        print(pid)
         if not pid.isdigit() or len(pid) != 7:
             return jsonify(),404
     else:
@@ -124,16 +129,22 @@ def api_add():
 
     if "name" in payload:
         name = payload['name']
+        if not name:
+            name = "N/A"
     else:
         name = "N/A"
     
     if "size" in payload:
         size = payload['size']
+        if not size:
+            size = "N/A"
     else:
         size = "N/A"
 
     if "color" in payload:
         color = payload['color']
+        if not color:
+            color = "N/A"
     else:
         color = "N/A"
 
