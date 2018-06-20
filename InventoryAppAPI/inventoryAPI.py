@@ -11,6 +11,11 @@ def dict_factory(cursor,row):
         d[col[0]] = row[idx]
     return d
 
+
+@app.errorhandler(500)
+def error():
+    return jsonify(),500
+
 #displays all products in the database
 @app.route('/products/',methods=['GET'])
 def api_all():
@@ -175,4 +180,42 @@ def api_add():
 
     return jsonify(details),200
 
+#allows user to search by id,name,size, and/or color
+@app.route('/products/search')
+def search():
+    query_parameters = request.args
+
+    id = query_parameters.get('productid')
+    name = query_parameters.get('name')
+    size = query_parameters.get('size')
+    color = query_parameters.get('color')
+    
+    query = "SELECT * FROM data WHERE"
+    to_filter = []
+
+    if id:
+        query += ' productid LIKE ? AND'
+        to_filter.append('%'+id+'%')
+    if name:
+        query += ' name LIKE ? AND'
+        to_filter.append('%'+name+'%')
+    if size:
+        query += ' size LIKE ? AND'
+        to_filter.append('%'+size+'%')
+    if color:
+        query += ' color LIKE ? AND'
+        to_filter.append('%'+color+'%')
+    if not (id or name or size or color):
+        return jsonify(),404
+
+    query = query[:-4]
+
+    conn = sqlite3.connect('inventory.db')
+    conn.row_factory = dict_factory
+    cur = conn.cursor()
+
+    results = cur.execute(query,to_filter).fetchall()
+    return jsonify(results)
+
 app.run(port=9214,debug=True)
+
