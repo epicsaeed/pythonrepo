@@ -1,11 +1,4 @@
 
-#GLOBAL VARIABLES 
-Name = ""
-Productid = ""
-Size = ""
-Color = ""
-Instock = 0
-
 #returns true if product ID is valid
 def check_id(id):
     id = str(id)
@@ -21,10 +14,11 @@ def check_stock(instock):
     return False
 
 #checks if the passed parameters for POST are valid and returns true if so
-def check_POST_json(payload):
-    if ("name" or "size" or "color" or "in_stock") not in payload:
+def valid_POST_json(payload):
+    if ('name' or 'size' or 'color' or 'in_stock') in payload:
+        return True
+    else:
         return False
-    return True
 
 #checks if the passed parameters for PUT are valid and returs true if so
 def check_PUT_json(payload):

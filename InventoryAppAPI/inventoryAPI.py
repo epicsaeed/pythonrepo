@@ -51,51 +51,51 @@ def api_product(id):
         #updates details of passed product id
         payload = request.get_json()
 
-        #checks if payload is empty
+        #checks if payload is empty, returns 400 if so
         if not payload:
             return jsonify(),400
-            
+
+        #sets up parameters
+        name = payload.get('name')
+        size = payload.get('size')
+        color = payload.get('color')
+        in_stock = payload.get('in_stock')
+
         #returns a 400 if no known parameters are given
-        if not ParameterMethods.check_POST_json(payload):
-            print("checking payload")
-            return jsonify(),400
+        if not(name or size or color or in_stock):
+            print("no known parameter given")
+            return jsonify(),404
 
         #manipulates passed parameteres for updating 
-        if "name" in payload:
-            print("name in payload")#         testing
-            name = payload['name'] 
-            if not name:
-                print("but name is empty so it will be null")#         testing
+        if name != None:
+            if name == "" or name == " ":
                 name = "N/A"
             query = "UPDATE data SET name =? WHERE productid=?"
             cur.execute(query,(name,id))
             conn.commit()
-            print("commited name")
 
-        if "size" in payload:
-            size = payload['size']
-            if not size:
+        if size != None:
+            if size == "" or size == " ":
                 size = "N/A"
             query = "UPDATE data SET size =? WHERE productid=?"
             cur.execute(query,(size,id))
             conn.commit()
 
-        if "color" in payload:
-            color = payload['color']
-            if not color:
+        if color != None:
+            if color == "" or color == " ":
                 color = "N/A"
             query = "UPDATE data SET color =? WHERE productid=?"
             cur.execute(query,(color,id))
             conn.commit()
 
-        if "in_stock" in payload:
-            instock = str(payload['in_stock'])
-            if not instock.isdigit() or not instock:
-                print("instock is invalid")
+        if in_stock != None:
+            if ParameterMethods.check_stock(in_stock):
+                query = "UPDATE data SET instock =? WHERE productid=?"
+                cur.execute(query,(in_stock,id))
+                conn.commit()
+            else:
                 return jsonify(),404
-            query = "UPDATE data SET instock =? WHERE productid=?"
-            cur.execute(query,(payload['in_stock'],id))
-            conn.commit()
+
         return jsonify(),200
     elif request.method == 'DELETE':
         #deletes item of passed product id
