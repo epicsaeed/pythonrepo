@@ -12,9 +12,15 @@ def dict_factory(cursor,row):
     return d
 
 
-@app.errorhandler(500)
-def error():
-    return jsonify(),500
+@app.errorhandler(404)
+def handle_notfound_error(e):
+    return jsonify(),404
+
+@app.errorhandler(400)
+def handle_unexpected_error(e):
+    return jsonify(),400
+
+
 
 #displays all products in the database
 @app.route('/products/',methods=['GET'])
@@ -218,5 +224,5 @@ def search():
     results = cur.execute(query,to_filter).fetchall()
     return jsonify(results)
 
-app.run(port=9214,debug=True)
+app.run(port=9214)
 
