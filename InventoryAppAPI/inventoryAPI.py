@@ -185,6 +185,7 @@ def api_add():
 def search():
     query_parameters = request.args
 
+    #checks for inserted parameters 
     id = query_parameters.get('productid')
     name = query_parameters.get('name')
     size = query_parameters.get('size')
