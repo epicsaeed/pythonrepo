@@ -11,7 +11,6 @@ def dict_factory(cursor,row):
         d[col[0]] = row[idx]
     return d
 
-
 @app.errorhandler(404)
 def handle_notfound_error(e):
     return jsonify(),404
@@ -19,9 +18,7 @@ def handle_notfound_error(e):
 @app.errorhandler(400)
 def handle_unexpected_error(e):
     return jsonify(),400
-
-
-
+ 
 #displays all products in the database
 @app.route('/products/',methods=['GET'])
 def api_all():
@@ -30,6 +27,7 @@ def api_all():
     cur = conn.cursor()
     all_products = cur.execute('SELECT * FROM data').fetchall()
     return jsonify(all_products)
+
 
 #displays details of specific id, deletes a product, updates a product
 @app.route('/products/<string:id>',methods=['POST','GET','DELETE'])
