@@ -11,9 +11,11 @@ def dict_factory(cursor,row):
     return d
 
 #routes to the home page of the server
-@app.route('/',methods=['GET'])
+@app.route('/',methods=['GET','POST'])
 def home():
-    return "<h1>Archive</h1><p>This site is a prototype for distant reading of sci fi novels.</p>"
+    value = request.json['array'][0]
+    return value
+    #return "<h1>Archive</h1><p>This site is a prototype for distant reading of sci fi novels.</p>"
 
 @app.route('/api/resources/books/all',methods=['GET'])
 def api_all():
