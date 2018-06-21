@@ -8,5 +8,5 @@ class TestCase(unittest.TestCase):
 
     def test_all_products(self):
         response = self.app.get('/products')
-        
+        data.
 
