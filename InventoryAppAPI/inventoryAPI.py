@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import sqlite3, ParameterMethods
 from werkzeug.exceptions import default_exceptions
+import products
 
 app = Flask(__name__)
 
@@ -11,6 +12,7 @@ def dict_factory(cursor,row):
         d[col[0]] = row[idx]
     return d
 
+#error handling functions:
 @app.errorhandler(404)
 def handle_notfound_error(e):
     return jsonify(),404
@@ -22,12 +24,8 @@ def handle_unexpected_error(e):
 #displays all products in the database
 @app.route('/products/',methods=['GET'])
 def api_all():
-    conn = sqlite3.connect('inventory.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
-    all_products = cur.execute('SELECT * FROM data').fetchall()
+    all_products = products.get_all()
     return jsonify(all_products)
-
 
 #displays details of specific id, deletes a product, updates a product
 @app.route('/products/<string:id>',methods=['POST','GET','DELETE'])
@@ -39,18 +37,17 @@ def api_product(id):
     else:
         return jsonify(),400
 
-    #initiate database connection 
     conn = sqlite3.connect('inventory.db')
     conn.row_factory = dict_factory
     cur = conn.cursor()
 
     if request.method == 'GET':
-        #displays details of passed product id
-        result = cur.execute("SELECT * FROM data WHERE productid=?",(id,)).fetchall()
-        if not result:
-            return jsonify(),404
+        item = products.get_one_product(id)
+        if item == 404:
+            return jsonify(),item
         else:
-            return jsonify(result)
+            return jsonify(item)
+
     elif request.method == 'POST':
         #updates details of passed product id
         payload = request.get_json()
@@ -59,48 +56,12 @@ def api_product(id):
         if not payload:
             return jsonify(),400
 
-        #sets up parameters
-        name = payload.get('name')
-        size = payload.get('size')
-        color = payload.get('color')
-        in_stock = payload.get('in_stock')
+        status = products.update_one_product(payload,id)
+        if status == 404:
+            return jsonify(),404   
+        else:
+            return jsonify(), 200
 
-        #returns a 400 if no known parameters are given
-        if not(name or size or color or in_stock):
-            print("no known parameter given")
-            return jsonify(),404
-
-        #manipulates passed parameteres for updating 
-        if name != None:
-            if name == "" or name == " ":
-                name = "N/A"
-            query = "UPDATE data SET name =? WHERE productid=?"
-            cur.execute(query,(name,id))
-            conn.commit()
-
-        if size != None:
-            if size == "" or size == " ":
-                size = "N/A"
-            query = "UPDATE data SET size =? WHERE productid=?"
-            cur.execute(query,(size,id))
-            conn.commit()
-
-        if color != None:
-            if color == "" or color == " ":
-                color = "N/A"
-            query = "UPDATE data SET color =? WHERE productid=?"
-            cur.execute(query,(color,id))
-            conn.commit()
-
-        if in_stock != None:
-            if ParameterMethods.check_stock(in_stock):
-                query = "UPDATE data SET instock =? WHERE productid=?"
-                cur.execute(query,(in_stock,id))
-                conn.commit()
-            else:
-                return jsonify(),404
-
-        return jsonify(),200
     elif request.method == 'DELETE':
         #deletes item of passed product id
 

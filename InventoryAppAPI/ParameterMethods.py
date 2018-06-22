@@ -7,11 +7,6 @@ def check_id(id):
             return True
     return False
 
-#checks if in_stock is valid
-def check_stock(instock):
-    if str(instock).isdigit():
-        return True
-    return False
 
 #checks if the passed parameters for POST are valid and returns true if so
 def valid_POST_json(payload):
