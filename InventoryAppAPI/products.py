@@ -1,5 +1,10 @@
 import sqlite3
 
+global conn,cur
+conn = sqlite3.connect('inventory.db')
+cur = conn.cursor()
+
+
 #returns items from the database as dictioaries
 def dict_factory(cursor,row):
     d = {}
@@ -24,11 +29,8 @@ def delete_all():
     # conn.commit()
 
 #displays details of passed product id
-def get_one_product(id):
+def get_one_product(conn,cur,id):
     #sets up database connection
-    conn = sqlite3.connect('inventory.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
 
     result = cur.execute("SELECT * FROM data WHERE productid=?",(id,)).fetchall()
     if not result:
@@ -36,7 +38,7 @@ def get_one_product(id):
     else:
         return result
 
-def update_one_product(payload,id):
+def update_one_product(conn,cur,payload,id,):
     #sets up database connection
     conn = sqlite3.connect('inventory.db')
     conn.row_factory = dict_factory
@@ -85,11 +87,8 @@ def update_one_product(payload,id):
 
     return 200
 
-def search_in_db(query_parameters):
-    #sets up database connection
-    conn = sqlite3.connect('inventory.db')
+def search_in_db(conn,cur,query_parameters):
     conn.row_factory = dict_factory
-    cur = conn.cursor()
 
     #checks for inserted parameters 
     id = query_parameters.get('productid')
@@ -99,6 +98,9 @@ def search_in_db(query_parameters):
     
     query = "SELECT * FROM data WHERE"
     to_filter = []
+
+    if not (id or name or size or color):
+        return 404
 
     if id:
         query += ' productid LIKE ? AND'
@@ -112,8 +114,6 @@ def search_in_db(query_parameters):
     if color:
         query += ' color LIKE ? AND'
         to_filter.append('%'+color+'%')
-    if not (id or name or size or color):
-        return 404
 
     query = query[:-4]
 
@@ -126,7 +126,7 @@ def check_stock(instock):
         return True
     return False
 
-def add_new_product(payload):
+def add_new_product(conn,cur,payload):
 
     details = {"name":"","product_id":"","size":"","color":"","in_stock":""}
 

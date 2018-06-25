@@ -5,6 +5,9 @@ import products
 
 app = Flask(__name__)
 
+conn = sqlite3.connect('inventory.db')
+cur = conn.cursor()
+
 #returns items from the database as dictioaries
 def dict_factory(cursor,row):
     d = {}
@@ -42,7 +45,7 @@ def api_product(id):
     cur = conn.cursor()
 
     if request.method == 'GET':
-        item = products.get_one_product(id)
+        item = products.get_one_product(conn,cur,id)
         if item == 404:
             return jsonify(),item
         else:
@@ -56,7 +59,7 @@ def api_product(id):
         if not payload:
             return jsonify(),400
 
-        status = products.update_one_product(payload,id)
+        status = products.update_one_product(conn,cur,payload,id)
         if status == 404:
             return jsonify(),404   
         else:
@@ -87,7 +90,7 @@ def api_add():
     else:
         return jsonify(),400
 
-    new = products.add_new_product(payload)
+    new = products.add_new_product(conn,cur,payload)
 
     if new == 404:
         return jsonify(),404
@@ -99,13 +102,10 @@ def api_add():
 #allows user to search by id,name,size, and/or color
 @app.route('/products/search')
 def search():
-    query_parameters = request.args
-    search = products.search_in_db(query_parameters)
-
+    search = products.search_in_db(conn,cur,request.args)
     if search == 404:
-        return jsonify(),search
+        return jsonify(),404
     else:
         return jsonify(search)
 
 app.run(port=9214)
-
