@@ -81,107 +81,31 @@ def api_product(id):
 @app.route('/products/add',methods=['PUT'])
 def api_add():
     payload = request.get_json()
-    details = {"name":"","product_id":"","size":"","color":"","in_stock":""}
 
     if ParameterMethods.check_PUT_json(payload):
         pass
     else:
         return jsonify(),400
 
-    if "product_id" in payload:
-        pid = str(payload['product_id'])
-        details["product_id"]=pid
-        print(pid)
-        if not pid.isdigit() or len(pid) != 7:
-            return jsonify(),404
-    else:
+    new = products.add_new_product(payload)
+
+    if new == 404:
         return jsonify(),404
-
-    if "in_stock" in payload:
-        instock = str(payload['in_stock'])
-        details["in_stock"]=instock
-        if not instock.isdigit() or not instock:
-            return jsonify(),404
+    elif new == 409:
+        return jsonify(), 409
     else:
-        return jsonify(),404
-
-    if "name" in payload:
-        name = payload['name']
-        if not name:
-            name = "N/A"
-    else:
-        name = "N/A"
-    
-    if "size" in payload:
-        size = payload['size']
-        if not size:
-            size = "N/A"
-    else:
-        size = "N/A"
-
-    if "color" in payload:
-        color = payload['color']
-        if not color:
-            color = "N/A"
-    else:
-        color = "N/A"
-
-    details["name"]=name
-    details["color"]=color
-    details["size"]=size
-
-    conn = sqlite3.connect('inventory.db')
-    cur = conn.cursor()
-    found = []
-       #checks if the pid exists in DB and returns a conflict error status code
-    cur.execute("SELECT * FROM data WHERE productid LIKE ?",(pid,))
-    for row in cur.fetchall():
-        found.append(row)
-        if found:
-            return jsonify(), 409
-
-    cur.execute("INSERT INTO data VALUES(:productid,:name,:size,:color,:instock)",{'productid':pid,'name':name,'size':size,'color':color,'instock':instock})
-    conn.commit()
-
-    return jsonify(details),200
+        return jsonify(new),200
 
 #allows user to search by id,name,size, and/or color
 @app.route('/products/search')
 def search():
     query_parameters = request.args
+    search = products.search_in_db(query_parameters)
 
-    #checks for inserted parameters 
-    id = query_parameters.get('productid')
-    name = query_parameters.get('name')
-    size = query_parameters.get('size')
-    color = query_parameters.get('color')
-    
-    query = "SELECT * FROM data WHERE"
-    to_filter = []
-
-    if id:
-        query += ' productid LIKE ? AND'
-        to_filter.append('%'+id+'%')
-    if name:
-        query += ' name LIKE ? AND'
-        to_filter.append('%'+name+'%')
-    if size:
-        query += ' size LIKE ? AND'
-        to_filter.append('%'+size+'%')
-    if color:
-        query += ' color LIKE ? AND'
-        to_filter.append('%'+color+'%')
-    if not (id or name or size or color):
-        return jsonify(),404
-
-    query = query[:-4]
-
-    conn = sqlite3.connect('inventory.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
-
-    results = cur.execute(query,to_filter).fetchall()
-    return jsonify(results)
+    if search == 404:
+        return jsonify(),search
+    else:
+        return jsonify(search)
 
 app.run(port=9214)
 
