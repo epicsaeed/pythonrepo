@@ -1,9 +1,9 @@
 from InventoryAppAPI import products
 from unittest import TestCase
-from nose.tools import assert_true,assert_is_not_none
+from nose.tools import assert_true,assert_is_not_none, assert_false
 import requests, sqlite3
 from unittest.mock import patch
-import unittest
+import unittest, json
 
 #declars global database stack in memory
 global DB, cursor
@@ -44,22 +44,19 @@ class ProductsTests(TestCase):
     def tearDown(self):
         DB.close()
         super().tearDown()
-
+    
+    """############## DATABASE TESTS ##############"""
+    def test_GET_all_is_empty(self):
+        DB.row_factory = products.dict_factory
+        all_products = cursor.execute('SELECT * FROM data').fetchall()
+        self.assertFalse(all_products == None)
     def test_GET_all_is_not_empty(self):
         DB.row_factory = products.dict_factory
         all_products = cursor.execute('SELECT * FROM data').fetchall()
         assert_is_not_none(all_products)
-
-    def test_GET_all_is_empty(self):
-        DB.row_factory = products.dict_factory
-        all_products = cursor.execute('SELECT * FROM data').fetchall()
-        assert all_products != None
-
     def test_GET_one_valid_item(self):
-        #ensures the request returns the cirrect details 
         item = products.get_one_product(DB,cursor,1234567)
-        assert item == [("1234567","some item","M","red",23)]
-
+        assert item == [("1234567","oversized coat","M","red",23)]
     def test_GET_invalid_items(self):
         item = products.get_one_product(DB,cursor,9999999)
         assert item == 404
@@ -70,22 +67,37 @@ class ProductsTests(TestCase):
         item = products.get_one_product(DB,cursor,'')
         assert item == 404
 
-    #checks if the search function works correctly
-    # def test_GET_search_for_item(self):
 
 
 
 
+    """############## WEB SERVICE TESTS ##############"""
+    def test_GET_all_returns_something(self):
+        URL = 'http://127.0.0.1:9214/products '
+        response = requests.get(url=URL)
+        data = response.json()
+        # data = json.loads(response)
+        print(data)
+        assert data != None
 
 
 
-        # URL = 'http://127.0.0.1:9214/products/search'
-        # query = "jacket"
-        # PARAMS = {'name':query}
-        # response = requests.get(url = URL, params = PARAMS)
-        # data = response.json()
-        # assert response.status_code == 200
-        # print(data)
+
+    def test_GET_search_for_valid_item(self):
+        query ={"size":"M"}
+        item = products.search_in_db(DB,cursor,query)
+        assert_is_not_none(item)
+        ############################################
+        URL = 'http://127.0.0.1:9214/products/search'
+        query = "M"
+        PARAMS = {'size':query}
+        response = requests.get(url = URL, params = PARAMS)
+        data = response.json()
+        print(data)
+        assert response.status_code == 200
+        
+
+
 
     # #mocks a PUT request to test adding a new item
     # def test_PUT_add_new_product(self):
@@ -95,6 +107,7 @@ class ProductsTests(TestCase):
     #         "color":"red",
     #         "size":"M",
     #         "in_stock":23,
+
     #         "product_id":"8273843"
     #     }
     #     headers = {"x-api-key":"test_api_dp"}
