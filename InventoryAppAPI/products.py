@@ -1,9 +1,8 @@
-import sqlite3
+import sqlite3, random
 
 global conn,cur
 conn = sqlite3.connect('inventory.db')
 cur = conn.cursor()
-
 
 #returns items from the database as dictioaries
 def dict_factory(cursor,row):
@@ -39,10 +38,6 @@ def get_one_product(conn,cur,id):
         return result
 
 def update_one_product(conn,cur,payload,id,):
-    #sets up database connection
-    conn = sqlite3.connect('inventory.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
 
     #sets up parameters
     name = payload.get('name')
@@ -50,10 +45,14 @@ def update_one_product(conn,cur,payload,id,):
     color = payload.get('color')
     in_stock = payload.get('in_stock')
 
+    #checks if the passed product id exists
+    exists = get_one_product(conn,cur,id)
+    if exists == 404:
+        return 404
+
     #returns a 400 if no known parameters are given
     if not(name or size or color or in_stock):
-        print("no known parameter given")
-        return 404
+        return 400
 
     #manipulates passed parameteres for updating 
     if name != None:
@@ -187,3 +186,17 @@ def add_new_product(conn,cur,payload):
     conn.commit()
 
     return details
+
+def delete_one_product(id):
+    #checks if the pid exists in DB and returns 404 if not
+    cur.execute("SELECT * FROM data WHERE productid = ?",(id,))
+    data = cur.fetchall()
+    if len(data) == 0:
+        return 404
+    else:
+        cur.execute("DELETE FROM data WHERE productid =?",(id,))
+        conn.commit()
+        return 200
+
+def random_pid():
+    return random.randint(0000000,9999999)

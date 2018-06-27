@@ -66,24 +66,23 @@ def api_product(id):
         status = products.update_one_product(conn,cur,payload,id)
         if status == 404:
             return jsonify(),404   
+        elif status == 400:
+            return jsonify(),400
         else:
             return jsonify(), 200
 
     elif request.method == 'DELETE':
-        #deletes item of passed product id
 
         if id == "1234567": #used for unit testing only.
             return jsonify(),200
+                #deletes item of passed product id
 
-        #checks if the pid exists in DB and returns 404 if not
-        cur.execute("SELECT * FROM data WHERE productid = ?",(id,))
-        data = cur.fetchall()
-        if len(data) == 0:
-            return jsonify(), 404
-        else:
-            cur.execute("DELETE FROM data WHERE productid =?",(id,))
-            conn.commit()
+        del_status = products.delete_one_product(id)
+        if del_status == 200:
             return jsonify(),200
+        else:
+            return jsonify(),404
+
     else:
         #return NOT FOUND if mehtod is not of the above.
         return jsonify(),404
