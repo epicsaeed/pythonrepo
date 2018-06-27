@@ -3,15 +3,16 @@ from unittest import TestCase
 from nose.tools import assert_true,assert_is_not_none, assert_false
 import requests, sqlite3
 from unittest.mock import patch
-import unittest, json
+import unittest, json, random
+
 
 #declars global database stack in memory
 global DB, cursor
-DB = sqlite3.connect(':memory:')
+DB = sqlite3.connect('file::memory:?cache=shared')
 cursor = DB.cursor()
 
 class ProductsTests(TestCase):
-    
+
     #creates a table data in memory and importes the data from inventory.db to it 
     def setUp(self):
         super().setUp()
@@ -42,21 +43,24 @@ class ProductsTests(TestCase):
 
     #wibes the database stack in memory
     def tearDown(self):
-        DB.close()
+        # DB.close()
         super().tearDown()
     
-    """############## DATABASE TESTS ##############"""
+    """############## MEMORY DATABASE TESTS ##############"""
     def test_GET_all_is_empty(self):
         DB.row_factory = products.dict_factory
         all_products = cursor.execute('SELECT * FROM data').fetchall()
         self.assertFalse(all_products == None)
+    
     def test_GET_all_is_not_empty(self):
         DB.row_factory = products.dict_factory
         all_products = cursor.execute('SELECT * FROM data').fetchall()
         assert_is_not_none(all_products)
+    
     def test_GET_one_valid_item(self):
         item = products.get_one_product(DB,cursor,1234567)
-        assert item == [("1234567","oversized coat","M","red",23)]
+        assert item != None
+    
     def test_GET_invalid_items(self):
         item = products.get_one_product(DB,cursor,9999999)
         assert item == 404
@@ -67,6 +71,61 @@ class ProductsTests(TestCase):
         item = products.get_one_product(DB,cursor,'')
         assert item == 404
 
+    def test_POST_valid_pid_db(self):
+        payload = {"name":"changing the name","in_stock":99}
+        id = 1234567
+        update_status = products.update_one_product(DB,cursor,payload,id)
+        assert update_status == 200
+
+    def test_POST_invalid_pid_db(self):
+        payload = {"name":"changing the name","in_stock":99}
+        id = random.randint(0000000,9999999)
+        update_status = products.update_one_product(DB,cursor,payload,id)
+        assert update_status == 404
+        
+    def test_POST_invalid_payload_db(self):
+        payload = {}
+        id = 1234567
+        update_status = products.update_one_product(DB,cursor,payload,id)
+        assert update_status == 400
+
+        payload = {"product_id":"3452875"}
+        update_status = products.update_one_product(DB,cursor,payload,id)
+        assert update_status == 400
+
+    def test_PUT_valid_json_payload(self):
+        pid = products.random_pid()
+        payload = {"product_id":pid,"name":"testing","size":"EU40","color":"orange","in_stock":545}
+        add_status = products.add_new_product(DB,cursor,payload)
+        assert 'name' in add_status
+
+    def test_PUT_invalid_json_payload(self):
+        payload = {}
+        add_status = products.add_new_product(DB,cursor,payload)
+        assert add_status == 404
+
+        payload = {"nothing":"foo"}
+        add_status = products.add_new_product(DB,cursor,payload)
+        assert add_status == 404
+
+        payload = {"name":"testing","size":"EU40","color":"orange"}
+        add_status = products.add_new_product(DB,cursor,payload)
+        assert add_status == 404
+
+    def test_PUT_repeated_pid(self):
+        payload = {"product_id":"1234567","in_stock":888}
+        add_status = products.add_new_product(DB,cursor,payload)
+        assert add_status == 409
+
+    def test_DELETE_valid_pid_db(self):
+        delete_status = products.delete_one_product(1234567)
+        assert delete_status == 200
+
+    def test_DELETE_invalid_pid_db(self):
+        delete_status = products.delete_one_product(products.random_pid())
+        assert delete_status == 404
+
+    
     """############## WEB SERVICE TESTS ##############"""
     def test_GET_all_returns_json_file(self):
         #checks if GET all_products returns a json file
@@ -82,19 +141,19 @@ class ProductsTests(TestCase):
         assert response.status_code == 200
         assert data != None
     
-    def test_DELETE_valid_item(self):
+    def test_DELETE_valid_pid(self):
         #checks that deleting a valid item returns 200 of type json
         url = 'http://127.0.0.1:9214/products/1234567'
         response = requests.delete(url)
         assert response.status_code == 200
 
-    def test_DELETE_invalid_item(self):
+    def test_DELETE_invalid_pid(self):
         #checks that deleting an invalid item returns 404 of type json
-        url = 'http://127.0.0.1:9214/products/9999888'
+        url = 'http://127.0.0.1:9214/products/3213215'
         response = requests.delete(url)
         assert response.status_code == 404
 
-    def test_DELETE_gibirish(self):
+    def test_DELETE_anything(self):
         #checks that adding anything after the requested url returns a json 404
         url = 'http://127.0.0.1:9214/products/laskdjflasdjflsd'
         response = requests.delete(url)
@@ -102,60 +161,97 @@ class ProductsTests(TestCase):
 
     def test_PUT_product_of_valid_json_payload(self):
         #checks that the json payload is valid (test multiple payloads) (check for status also)
-
         url = 'http://127.0.0.1:9214/products/add'
-        payload ={"name":"testing jacket","in_stock":"83","product_id":"6464645","size":"L","color":"grey"}
-        response = requests.put(url,data=payload)
+        pid = products.random_pid()
+        payload ={"name":"testing","in_stock":"83","product_id":pid,"size":"L","color":"grey"}
+        response = requests.put(url,json=payload)
         assert response.status_code == 200
+        products.delete_one_product(pid)
 
-        payload ={"in_stock":66,"product_id":"1111111"}
-        response = requests.put(url,data=payload)
+        pid = products.random_pid()
+        payload ={"in_stock":66,"product_id":pid}
+        response = requests.put(url,json=payload)
         assert response.status_code == 200
+        products.delete_one_product(pid)
 
     def test_PUT_product_of_invalid_json_payload(self):
         #checks that the json payload is invalid and handled properly (i.e. check for status and type)
-        pass
+        url = 'http://127.0.0.1:9214/products/add'
+        payload ={"in_stock":66,"product_id":"000000000000"}
+        response = requests.put(url,json=payload)
+        assert response.status_code == 404
+        
+        payload["product_id"] = "something not valid"
+        response = requests.put(url,json=payload)
+        assert response.status_code == 404
+
+        payload ={}
+        response = requests.put(url,json=payload)
+        assert response.status_code == 400 
 
     def test_PUT_repeated_ID(self):
         #check if the server returns a conflic status code when adding a repeated item
-        pass
+        url = 'http://127.0.0.1:9214/products/add'
+        payload = {"product_id":"1234567","in_stock":99}
+        response = requests.put(url,json=payload)
+        assert response.status_code == 409
 
-    # def test_
+    def test_POST_valid_pid(self):
+        #used to test that updating a valid product id
+        url =  'http://127.0.0.1:9214/products/1234567'
+        payload = {"name":"something updated"}
+        response = requests.post(url,json=payload)
+        assert response.status_code == 200
 
-    # #mocks a PUT request to test adding a new item
-    # def test_PUT_add_new_product(self):
-    #     url = 'http://127.0.0.1:9214/products/add'
-    #     payload = {
-    #         "name":"some item",
-    #         "color":"red",
-    #         "size":"M",
-    #         "in_stock":23,
+    def test_POST_invalid_pid(self):
+        #used to test that updating an invalid product id returns 404
+        url =  'http://127.0.0.1:9214/products/9999333'
+        payload = {"in_stock":12}
+        response = requests.post(url,json=payload)
+        assert response.status_code == 404
+    #must be fixed so when trying to update a non existant PID the program returns a 404
 
-    #         "product_id":"8273843"
-    #     }
-    #     headers = {"x-api-key":"test_api_dp"}
-    #     response = requests.put(url,json=payload,headers=headers)
-    #     assert response.status_code == 200 or 409 #RETURNS 200 WHEN ADDING A NEW ITEM OR 409 IF THE ITEM EXISTS.
+    def test_POST_valid_payload(self):
+        #test updating a product with a valid json payload
+        url =  'http://127.0.0.1:9214/products/1234567'
+        payload = {"name":"something"}
+        response = requests.post(url,json=payload)
+        assert response.status_code == 200
+
+    def test_POST_invalid_payload(self):
+        #test updating a product with an invalid json payload
+        url =  'http://127.0.0.1:9214/products/1234567'
+        payload = {}
+        response = requests.post(url,json=payload)
+        assert response.status_code == 400
+
+        payload["instock"] = 33
+        response = requests.post(url,json=payload)
+        assert response.status_code == 404
+
+    def test_GET_search_invalid_query(self):
+        url = 'http://127.0.0.1:9214/products/search'
+        query = {}
+        response = requests.get(url,params=query)
+        assert response.status_code == 404 and response.headers['Content-Type'] == 'application/json'
+
+        query = {"invalid parameter":"bad payload"}
+        response = requests.get(url,params=query)
+        assert response.status_code == 404 and response.headers['Content-Type'] == 'application/json'
+
+        query = {"sdfsd":234234}
+        response = requests.get(url,params=query)
+        assert response.status_code == 404 and response.headers['Content-Type'] == 'application/json'
+
+    def test_GET_search_valid_query(self):
+        url = 'http://127.0.0.1:9214/products/search'
+
+        query = {"name":"jacket"}
+        response = requests.get(url,params=query)
+        assert response.status_code == 200 and response.headers['Content-Type'] == 'application/json'
+
+        query = {"size":"large"}
+        response = requests.get(url,params=query)
+        assert response.status_code == 200 and response.headers['Content-Type'] == 'application/json'
 
 
-
-
-    # test insert a product
-    # 1. assert there is no product
-    # 2. import products
-    # 3. assert get all products returns the imported product
-
-
-
-
-    #This method mocks a GET request but needs the server to be running
-    # def test_request_response(self):
-    #     #tests getting all items
-    #     response = requests.get('http://127.0.0.1:9214/products/')
-    #     assert_true(response.ok)
-    #     #tests getting one product
-    #     response = requests.get('http://127.0.0.1:9214/products/8374345')
-    #     assert_true(response.ok)
-    #     #tests searching capabilities
-    #     response = requests.get('http://127.0.0.1:9214/products/search?name=shirt')
-    #     assert_true(response.ok)
