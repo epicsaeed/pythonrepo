@@ -67,37 +67,60 @@ class ProductsTests(TestCase):
         item = products.get_one_product(DB,cursor,'')
         assert item == 404
 
-
-
-
-
     """############## WEB SERVICE TESTS ##############"""
-    def test_GET_all_returns_something(self):
-        URL = 'http://127.0.0.1:9214/products '
-        response = requests.get(url=URL)
-        data = response.json()
-        # data = json.loads(response)
-        print(data)
-        assert data != None
-
-
-
-
-    def test_GET_search_for_valid_item(self):
-        query ={"size":"M"}
-        item = products.search_in_db(DB,cursor,query)
-        assert_is_not_none(item)
-        ############################################
-        URL = 'http://127.0.0.1:9214/products/search'
-        query = "M"
-        PARAMS = {'size':query}
-        response = requests.get(url = URL, params = PARAMS)
-        data = response.json()
-        print(data)
+    def test_GET_all_returns_json_file(self):
+        #checks if GET all_products returns a json file
+        url = 'http://127.0.0.1:9214/products/'
+        response = requests.get(url)
+        assert response.headers['content-type'] == 'application/json'
         assert response.status_code == 200
-        
 
+    def test_GET_all_does_not_return_an_empty_json(self):
+        url = 'http://127.0.0.1:9214/products/'
+        response = requests.get(url)
+        data = response.json()
+        assert response.status_code == 200
+        assert data != None
+    
+    def test_DELETE_valid_item(self):
+        #checks that deleting a valid item returns 200 of type json
+        url = 'http://127.0.0.1:9214/products/1234567'
+        response = requests.delete(url)
+        assert response.status_code == 200
 
+    def test_DELETE_invalid_item(self):
+        #checks that deleting an invalid item returns 404 of type json
+        url = 'http://127.0.0.1:9214/products/9999888'
+        response = requests.delete(url)
+        assert response.status_code == 404
+
+    def test_DELETE_gibirish(self):
+        #checks that adding anything after the requested url returns a json 404
+        url = 'http://127.0.0.1:9214/products/laskdjflasdjflsd'
+        response = requests.delete(url)
+        assert response.status_code == 400
+
+    def test_PUT_product_of_valid_json_payload(self):
+        #checks that the json payload is valid (test multiple payloads) (check for status also)
+
+        url = 'http://127.0.0.1:9214/products/add'
+        payload ={"name":"testing jacket","in_stock":"83","product_id":"6464645","size":"L","color":"grey"}
+        response = requests.put(url,data=payload)
+        assert response.status_code == 200
+
+        payload ={"in_stock":66,"product_id":"1111111"}
+        response = requests.put(url,data=payload)
+        assert response.status_code == 200
+
+    def test_PUT_product_of_invalid_json_payload(self):
+        #checks that the json payload is invalid and handled properly (i.e. check for status and type)
+        pass
+
+    def test_PUT_repeated_ID(self):
+        #check if the server returns a conflic status code when adding a repeated item
+        pass
+
+    # def test_
 
     # #mocks a PUT request to test adding a new item
     # def test_PUT_add_new_product(self):
