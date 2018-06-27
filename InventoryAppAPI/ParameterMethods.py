@@ -17,6 +17,6 @@ def valid_POST_json(payload):
 
 #checks if the passed parameters for PUT are valid and returs true if so
 def check_PUT_json(payload):
-    if "product_id" not in payload and "in_stock" not in payload:
-        return False
-    return True
+    if "product_id" in payload and "in_stock" in payload:
+        return True
+    return False
