@@ -9,11 +9,11 @@ conn = sqlite3.connect('inventory.db')
 cur = conn.cursor()
 
 #returns items from the database as dictioaries
-def dict_factory(cursor,row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
+# def dict_factory(cursor,row):
+#     d = {}
+#     for idx, col in enumerate(cursor.description):
+#         d[col[0]] = row[idx]
+#     return d
 
 #error handling functions:
 @app.errorhandler(404)
@@ -43,10 +43,6 @@ def api_product(id):
         pass
     else:
         return jsonify(),400
-
-    conn = sqlite3.connect('inventory.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
 
     if request.method == 'GET':
         item = products.get_one_product(conn,cur,id)

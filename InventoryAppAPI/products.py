@@ -91,7 +91,6 @@ def search_in_db(conn,cur,query_parameters):
 
     #checks for inserted parameters 
     id = query_parameters.get('productid')
-    print(query_parameters.get('productid'))
     name = query_parameters.get('name')
     size = query_parameters.get('size')
     color = query_parameters.get('color')
