@@ -5,20 +5,19 @@ import requests, sqlite3
 from unittest.mock import patch
 import unittest, json, random
 
-
-#declars global database stack in memory
-global DB, cursor
-DB = sqlite3.connect('file::memory:?cache=shared')
-cursor = DB.cursor()
-
 class ProductsTests(TestCase):
 
     #creates a table data in memory and importes the data from inventory.db to it 
     def setUp(self):
         super().setUp()
+        #declars global database stack in memory
+        global DB, cursor
+        DB = sqlite3.connect(':memory:')
+        cursor = DB.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS data(productid TEXT, name TEXT,size TEXT, color TEXT, instock INTEGER)''')
         DB.commit()
         productsdict = products.get_all()
+
         pid = []
         n = []
         s = []
@@ -43,10 +42,12 @@ class ProductsTests(TestCase):
 
     #wibes the database stack in memory
     def tearDown(self):
-        # DB.close()
-        super().tearDown()
+        cursor.execute("DELETE FROM data")
+        DB.commit()
+        super().tearDown
     
     """############## MEMORY DATABASE TESTS ##############"""
+    
     def test_GET_all_is_empty(self):
         DB.row_factory = products.dict_factory
         all_products = cursor.execute('SELECT * FROM data').fetchall()
@@ -58,8 +59,8 @@ class ProductsTests(TestCase):
         assert_is_not_none(all_products)
     
     def test_GET_one_valid_item(self):
-        item = products.get_one_product(DB,cursor,1234567)
-        assert item != None
+        item = products.get_one_product(DB,cursor,9465312)
+        assert item[0][0] == '9465312'
     
     def test_GET_invalid_items(self):
         item = products.get_one_product(DB,cursor,9999999)
@@ -72,7 +73,7 @@ class ProductsTests(TestCase):
         assert item == 404
 
     def test_POST_valid_pid_db(self):
-        payload = {"name":"changing the name","in_stock":99}
+        payload = {"name":"HAS BEEN UPDATED","in_stock":99}
         id = 1234567
         update_status = products.update_one_product(DB,cursor,payload,id)
         assert update_status == 200
@@ -97,7 +98,7 @@ class ProductsTests(TestCase):
         pid = products.random_pid()
         payload = {"product_id":pid,"name":"testing","size":"EU40","color":"orange","in_stock":545}
         add_status = products.add_new_product(DB,cursor,payload)
-        assert 'name' in add_status
+        assert add_status['product_id'] == str(pid)
 
     def test_PUT_invalid_json_payload(self):
         payload = {}
@@ -122,11 +123,12 @@ class ProductsTests(TestCase):
         assert delete_status == 200
 
     def test_DELETE_invalid_pid_db(self):
-        delete_status = products.delete_one_product(products.random_pid())
+        delete_status = products.delete_one_product(9999999)
         assert delete_status == 404
 
     
     """############## WEB SERVICE TESTS ##############"""
+
     def test_GET_all_returns_json_file(self):
         #checks if GET all_products returns a json file
         url = 'http://127.0.0.1:9214/products/'
@@ -163,7 +165,7 @@ class ProductsTests(TestCase):
         #checks that the json payload is valid (test multiple payloads) (check for status also)
         url = 'http://127.0.0.1:9214/products/add'
         pid = products.random_pid()
-        payload ={"name":"testing","in_stock":"83","product_id":pid,"size":"L","color":"grey"}
+        payload ={"name":"testing","in_stock":42,"product_id":pid,"size":"L","color":"grey"}
         response = requests.put(url,json=payload)
         assert response.status_code == 200
         products.delete_one_product(pid)
@@ -192,7 +194,7 @@ class ProductsTests(TestCase):
     def test_PUT_repeated_ID(self):
         #check if the server returns a conflic status code when adding a repeated item
         url = 'http://127.0.0.1:9214/products/add'
-        payload = {"product_id":"1234567","in_stock":99}
+        payload = {"product_id":"8374345","in_stock":99}
         response = requests.put(url,json=payload)
         assert response.status_code == 409
 
@@ -227,7 +229,7 @@ class ProductsTests(TestCase):
 
         payload["instock"] = 33
         response = requests.post(url,json=payload)
-        assert response.status_code == 404
+        assert response.status_code == 400
 
     def test_GET_search_invalid_query(self):
         url = 'http://127.0.0.1:9214/products/search'
