@@ -1,6 +1,0 @@
-{
-  "InventoryAppAPI/tests/test_products.py::ProductsTests::test_POST_valid_payload": true,
-  "InventoryAppAPI/tests/test_products.py::ProductsTests::test_POST_valid_pid": true,
-  "InventoryAppAPI/tests/test_products.py::ProductsTests::test_PUT_product_of_valid_json_payload": true,
-  "InventoryAppAPI/tests/test_products.py::ProductsTests::test_PUT_repeated_ID": true
-}
