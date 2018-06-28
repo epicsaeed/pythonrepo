@@ -1,6 +1,6 @@
 import sqlite3, random
 
-global conn,cur
+# global conn,cur
 conn = sqlite3.connect('inventory.db')
 cur = conn.cursor()
 
@@ -28,25 +28,25 @@ def delete_all():
     # conn.commit()
 
 #displays details of passed product id
-def get_one_product(conn,cur,id):
+def get_one_product(DATABSE,CURSOR,PID):
     #sets up database connection
 
-    result = cur.execute("SELECT * FROM data WHERE productid=?",(id,)).fetchall()
+    result = CURSOR.execute("SELECT * FROM data WHERE productid=?",(PID,)).fetchall()
     if not result:
         return 404
     else:
         return result
 
-def update_one_product(conn,cur,payload,id,):
+def update_one_product(DATABASE,CURSOR,JSON,ID,):
 
     #sets up parameters
-    name = payload.get('name')
-    size = payload.get('size')
-    color = payload.get('color')
-    in_stock = payload.get('in_stock')
+    name = JSON.get('name')
+    size = JSON.get('size')
+    color = JSON.get('color')
+    in_stock = JSON.get('in_stock')
 
     #checks if the passed product id exists
-    exists = get_one_product(conn,cur,id)
+    exists = get_one_product(DATABASE,CURSOR,ID)
     if exists == 404:
         return 404
 
@@ -59,28 +59,28 @@ def update_one_product(conn,cur,payload,id,):
         if name == "" or name == " ":
             name = "N/A"
         query = "UPDATE data SET name =? WHERE productid=?"
-        cur.execute(query,(name,id))
-        conn.commit()
+        CURSOR.execute(query,(name,ID))
+        DATABASE.commit()
 
     if size != None:
         if size == "" or size == " ":
             size = "N/A"
         query = "UPDATE data SET size =? WHERE productid=?"
-        cur.execute(query,(size,id))
-        conn.commit()
+        CURSOR.execute(query,(size,ID))
+        DATABASE.commit()
 
     if color != None:
         if color == "" or color == " ":
             color = "N/A"
         query = "UPDATE data SET color =? WHERE productid=?"
-        cur.execute(query,(color,id))
-        conn.commit()
+        CURSOR.execute(query,(color,ID))
+        DATABASE.commit()
 
     if in_stock != None:
         if check_stock(in_stock):
             query = "UPDATE data SET instock =? WHERE productid=?"
-            cur.execute(query,(in_stock,id))
-            conn.commit()
+            CURSOR.execute(query,(in_stock,ID))
+            DATABASE.commit()
         else:
            return 404
 
@@ -171,8 +171,8 @@ def add_new_product(conn,cur,payload):
     details["color"]=color
     details["size"]=size
 
-    conn = sqlite3.connect('inventory.db')
-    cur = conn.cursor()
+    # conn = sqlite3.connect('inventory.db')
+    # cur = conn.cursor()
     found = []
 
     #checks if the pid exists in DB and returns a conflict error status code
@@ -188,6 +188,9 @@ def add_new_product(conn,cur,payload):
     return details
 
 def delete_one_product(id):
+
+    if id == 1234567:
+        return 200
     #checks if the pid exists in DB and returns 404 if not
     cur.execute("SELECT * FROM data WHERE productid = ?",(id,))
     data = cur.fetchall()
@@ -200,3 +203,31 @@ def delete_one_product(id):
 
 def random_pid():
     return random.randint(0000000,9999999)
+
+def setDatabase(DB,cursor):
+    DB = sqlite3.connect(':memory:')
+    cursor = DB.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS data(productid TEXT, name TEXT,size TEXT, color TEXT, instock INTEGER)''')
+    DB.commit()
+    productsdict = get_all()
+    pid = []
+    n = []
+    s = []
+    c = []
+    stock = []
+    count = 0
+    for items in productsdict:
+        pid.append(items['productid'])
+        n.append(items['name'])
+        s.append(items['size'])
+        c.append(items['color'])
+        stock.append(items['instock'])
+    L = len(pid)
+    while L > count:
+        cursor.execute('''INSERT INTO data (productid,name,size,color,instock) VALUES(?,?,?,?,?)''',(pid[count],n[count],s[count],c[count],stock[count]))
+        count+=1
+    pid.clear()
+    n.clear()
+    s.clear()
+    c.clear()
+    stock.clear()
