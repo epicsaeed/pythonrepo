@@ -11,6 +11,7 @@ def dict_factory(cursor,row):
         d[col[0]] = row[idx]
     return d
 
+#returns al products in local database file as dict.
 def get_all():
     #sets up database connection
     conn = sqlite3.connect('inventory.db')
@@ -18,14 +19,6 @@ def get_all():
     cur = conn.cursor()
     all_products = cur.execute('SELECT * FROM data').fetchall()
     return all_products
-
-def delete_all():
-    #sets up database connection
-    conn = sqlite3.connect('inventory.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
-    cur.execute('DELETE FROM data')
-    # conn.commit()
 
 #displays details of passed product id
 def get_one_product(DATABSE,CURSOR,PID):
@@ -37,6 +30,7 @@ def get_one_product(DATABSE,CURSOR,PID):
     else:
         return result
 
+#updates a product based on passed json payload. returns OK
 def update_one_product(DATABASE,CURSOR,JSON,ID,):
 
     #sets up parameters
