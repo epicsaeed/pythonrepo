@@ -83,7 +83,6 @@ def update_one_product(DATABASE,CURSOR,JSON,ID,):
             DATABASE.commit()
         else:
            return 404
-
     return 200
 
 def search_in_db(conn,cur,query_parameters):

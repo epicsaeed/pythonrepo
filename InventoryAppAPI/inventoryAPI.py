@@ -4,16 +4,8 @@ from werkzeug.exceptions import default_exceptions
 import products
 
 app = Flask(__name__)
-
 conn = sqlite3.connect('inventory.db')
 cur = conn.cursor()
-
-#returns items from the database as dictioaries
-# def dict_factory(cursor,row):
-#     d = {}
-#     for idx, col in enumerate(cursor.description):
-#         d[col[0]] = row[idx]
-#     return d
 
 #error handling functions:
 @app.errorhandler(404)
