@@ -22,7 +22,6 @@ def get_one_product(DATABSE,CURSOR,PID):
     #sets up database connection
     CURSOR.row_factory = dict_factory
     result = CURSOR.execute('SELECT * FROM data WHERE productid=?',(PID,)).fetchall()
-    print(type(result),result)
     if not result:
         return 404
     else:
