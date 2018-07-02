@@ -23,8 +23,8 @@ def get_all():
 #displays details of passed product id
 def get_one_product(DATABSE,CURSOR,PID):
     #sets up database connection
-
-    result = CURSOR.execute("SELECT * FROM data WHERE productid=?",(PID,)).fetchall()
+    CURSOR.row_factory = dict_factory
+    result = CURSOR.execute('SELECT * FROM data WHERE productid=?',(PID,)).fetchall()
     if not result:
         return 404
     else:
@@ -80,7 +80,7 @@ def update_one_product(DATABASE,CURSOR,JSON,ID,):
     return 200
 
 def search_in_db(conn,cur,query_parameters):
-    # conn.row_factory = dict_factory
+    cur.row_factory = dict_factory
 
     #checks for inserted parameters 
     id = query_parameters.get('productid')
@@ -88,7 +88,7 @@ def search_in_db(conn,cur,query_parameters):
     size = query_parameters.get('size')
     color = query_parameters.get('color')
     
-    query = "SELECT * FROM data WHERE"
+    query = 'SELECT * FROM data WHERE'
     to_filter = []
 
     if not (id or name or size or color):
