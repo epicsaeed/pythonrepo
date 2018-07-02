@@ -255,5 +255,3 @@ class ProductsTests(TestCase):
         query = {"size":"large"}
         response = requests.get(url,params=query)
         assert response.status_code == 200 and response.headers['Content-Type'] == 'application/json'
-
-

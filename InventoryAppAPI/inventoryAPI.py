@@ -7,6 +7,8 @@ app = Flask(__name__)
 conn = sqlite3.connect('inventory.db')
 cur = conn.cursor()
 
+
+
 #error handling functions:
 @app.errorhandler(404)
 def handle_notfound_error(e):

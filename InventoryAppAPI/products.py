@@ -1,8 +1,8 @@
 import sqlite3, random
 
 # global conn,cur
-conn = sqlite3.connect('inventory.db')
-cur = conn.cursor()
+# conn = sqlite3.connect('inventory.db')
+# cur = conn.cursor()
 
 #returns items from the database as dictioaries
 def dict_factory(cursor,row):
@@ -80,7 +80,7 @@ def update_one_product(DATABASE,CURSOR,JSON,ID,):
     return 200
 
 def search_in_db(conn,cur,query_parameters):
-    conn.row_factory = dict_factory
+    # conn.row_factory = dict_factory
 
     #checks for inserted parameters 
     id = query_parameters.get('productid')
@@ -180,6 +180,9 @@ def add_new_product(conn,cur,payload):
     return details
 
 def delete_one_product(id):
+
+    conn = sqlite3.connect('inventory.db')
+    cur = conn.cursor()
 
     if id == 1234567:
         return 200
