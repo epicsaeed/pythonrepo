@@ -136,6 +136,18 @@ class ProductsTests(TestCase):
         assert response.headers['content-type'] == 'application/json'
         assert response.status_code == 200
 
+    def test_GET_all_returns_dict(self):
+        url = 'http://127.0.0.1:9214/products/'
+        response = requests.get(url)
+        entry = response.json()[0]
+        assert ('name' and 'color' and 'size' and 'productid' and 'instock') in entry
+
+    def test_GET_all_does_not_return_non_dict(self):
+        url = 'http://127.0.0.1:9214/products/'
+        response = requests.get(url)
+        entry = response.json()[0]
+        assert_false('name' and 'color' and 'size' and 'productid' and 'instock' not in entry)
+
     def test_GET_all_does_not_return_an_empty_json(self):
         url = 'http://127.0.0.1:9214/products/'
         response = requests.get(url)
@@ -197,6 +209,20 @@ class ProductsTests(TestCase):
         payload = {"product_id":"8374345","in_stock":99}
         response = requests.put(url,json=payload)
         assert response.status_code == 409
+
+    def test_PUT_returns_the_added_item(self):
+        url = 'http://127.0.0.1:9214/products/add'
+        pid = products.random_pid()
+        payload ={"name":"testing PUT","in_stock":42,"product_id":pid}
+        requests.put(url,json=payload)
+
+        pid = str(pid)
+        url = 'http://127.0.0.1:9214/products/' + pid
+        response = requests.get(url)
+        json = response.json()[0]
+        checkPoint = json['productid']
+        assert pid in checkPoint
+
 
     def test_POST_valid_pid(self):
         #used to test that updating a valid product id
