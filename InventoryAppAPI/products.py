@@ -1,8 +1,5 @@
 import sqlite3, random
 
-# global conn,cur
-# conn = sqlite3.connect('inventory.db')
-# cur = conn.cursor()
 
 #returns items from the database as dictioaries
 def dict_factory(cursor,row):
@@ -25,6 +22,7 @@ def get_one_product(DATABSE,CURSOR,PID):
     #sets up database connection
     CURSOR.row_factory = dict_factory
     result = CURSOR.execute('SELECT * FROM data WHERE productid=?',(PID,)).fetchall()
+    print(type(result),result)
     if not result:
         return 404
     else:
@@ -198,31 +196,3 @@ def delete_one_product(id):
 
 def random_pid():
     return random.randint(0000000,9999999)
-
-def setDatabase(DB,cursor):
-    DB = sqlite3.connect(':memory:')
-    cursor = DB.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS data(productid TEXT, name TEXT,size TEXT, color TEXT, instock INTEGER)''')
-    DB.commit()
-    productsdict = get_all()
-    pid = []
-    n = []
-    s = []
-    c = []
-    stock = []
-    count = 0
-    for items in productsdict:
-        pid.append(items['productid'])
-        n.append(items['name'])
-        s.append(items['size'])
-        c.append(items['color'])
-        stock.append(items['instock'])
-    L = len(pid)
-    while L > count:
-        cursor.execute('''INSERT INTO data (productid,name,size,color,instock) VALUES(?,?,?,?,?)''',(pid[count],n[count],s[count],c[count],stock[count]))
-        count+=1
-    pid.clear()
-    n.clear()
-    s.clear()
-    c.clear()
-    stock.clear()
