@@ -60,7 +60,8 @@ class ProductsTests(TestCase):
     
     def test_GET_one_valid_item(self):
         item = products.get_one_product(DB,cursor,9465312)
-        assert item[0][0] == '9465312'
+        item = item[0]
+        assert item['productid'] == '9465312'
     
     def test_GET_invalid_items(self):
         item = products.get_one_product(DB,cursor,9999999)
@@ -155,6 +156,24 @@ class ProductsTests(TestCase):
         assert response.status_code == 200
         assert data != None
     
+    def test_GET_product_of_valid_pid(self):
+        url = 'http://127.0.0.1:9214/products/9554144'
+        response = requests.get(url)
+        assert response.status_code == 200
+        assert response.headers['content-type'] == 'application/json'
+        assert response.headers['content-length'] == '131'
+
+    def test_GET_product_of_invalid_pid(self):
+        url = 'http://127.0.0.1:9214/products/1111111'
+        response = requests.get(url)
+        assert response.status_code == 404
+
+    def test_GET_product_returns_dict(self):
+        url = 'http://127.0.0.1:9214/products/9283783'
+        response = requests.get(url)
+        json = response.json()[0]
+        assert ('name' and 'color' and 'size' and 'productid' and 'instock') in json
+        
     def test_DELETE_valid_pid(self):
         #checks that deleting a valid item returns 200 of type json
         url = 'http://127.0.0.1:9214/products/1234567'
@@ -219,10 +238,11 @@ class ProductsTests(TestCase):
         pid = str(pid)
         url = 'http://127.0.0.1:9214/products/' + pid
         response = requests.get(url)
-        json = response.json()[0]
+        json = response.json()
+        json = json[0]
         checkPoint = json['productid']
         assert pid in checkPoint
-
+        products.delete_one_product(pid)
 
     def test_POST_valid_pid(self):
         #used to test that updating a valid product id
@@ -237,7 +257,6 @@ class ProductsTests(TestCase):
         payload = {"in_stock":12}
         response = requests.post(url,json=payload)
         assert response.status_code == 404
-    #must be fixed so when trying to update a non existant PID the program returns a 404
 
     def test_POST_valid_payload(self):
         #test updating a product with a valid json payload
@@ -281,3 +300,12 @@ class ProductsTests(TestCase):
         query = {"size":"large"}
         response = requests.get(url,params=query)
         assert response.status_code == 200 and response.headers['Content-Type'] == 'application/json'
+
+    def test_GET_search_returns_dict(self):
+        url = 'http://127.0.0.1:9214/products/search'
+        query = {"name":"jacket"}
+        response = requests.get(url,params=query)
+        json = response.json()
+        json = json[0]
+        assert 'productid' and 'instock' in json
+
