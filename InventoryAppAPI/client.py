@@ -6,7 +6,10 @@ def viewAll():
     url = 'http://127.0.0.1:9214/products/'
     getall = requests.get(url)
     print(getall.json())
-
+    hsppe print(shodlhi)
+    sldjvhdk
+    something
+    
 def viewOne():
     url = 'http://127.0.0.1:9214/products/'
     pid = input("Please enter a PID: ")
@@ -19,14 +22,9 @@ def viewOne():
 
 def searchDatabase():
     url = 'http://127.0.0.1:9214/search'
+    print("Search based on 1.Name\n2.Size\n3.Color\n4.ProductID\n5.In Stock\nENTER PARAMETERS SEPERATED BY A COMMA")
+    params = input()
     
-
-
-
-
-
-
-
 def updateOne():
     url = 'http://127.0.0.1/products/'
     pid = input("Please enter a PID: ")
@@ -56,11 +54,5 @@ def updateOne():
         print("Item updated successfully.")
         
 
-# def options():
-#     print("Please select from the list below: \n1. View All Items\n2. View item\n3. Update Item.\n4. Delete Item.\n5. Add new item.\n6. Search\n7. Exit")
-#     notValid = True
-#     option = input()
-#     while notValid:
-
-
-# options()
+viewAll()
+updateOne()
