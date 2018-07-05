@@ -111,13 +111,13 @@ def TourNumber():
     #Column 4 objects
 
     #Buttons
-    AddBtn = Button(TourWin,text="Add",width=10,height=2)
-    AddBtn.grid(row=1,column=5)
+    # AddBtn = Button(TourWin,text="Add",width=10,height=2)
+    # AddBtn.grid(row=1,column=5)
 
-    ClearBtn = Button(TourWin,text="Clear fields",width=10,height=2)
-    ClearBtn.grid(row=2,column=5)
+    # ClearBtn = Button(TourWin,text="Clear fields",width=10,height=2)
+    # ClearBtn.grid(row=2,column=5)
 
-    ExitBtn = Button(TourWin,text="Save and Exit",width=10,height=2)
+    # ExitBtn = Button(TourWin,text="Save and Exit",width=10,height=2)
     #ExitBtn.grid(row=3,column=5)
 
     #Tree
