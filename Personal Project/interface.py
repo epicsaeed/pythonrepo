@@ -10,7 +10,7 @@ window.title("SUPPORT APPLICATION")
 window.resizable(width=False, height=False)
 
 #Initiates main buttons
-TourBtn = Button(window, text="Tour",width=20,height=5,command=lambda:logic.TourWindow())
+TourBtn = Button(window, text="Tour",width=20,height=5,command=lambda:logic.TourWin())
 TourBtn.grid(row=0,column=0)
 
 WrongDepotBtn = Button(window, text="Fehlerhafte Zuführung",width=20,height=5)

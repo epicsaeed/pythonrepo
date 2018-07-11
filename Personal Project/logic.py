@@ -4,13 +4,14 @@ from tkinter import messagebox
 from tkinter import ttk
 from tkinter import font
 
-
 #GLOBAL VARIABLES 
 tour = ""
 duration = ""
 reason = ""
 number = ""
 line = {"tour":tour,"duration":duration,"reason":reason,"number":number}
+global counter
+counter = 0
 
 #window options
 TourWin = Tk()
@@ -67,7 +68,6 @@ for val, reason in enumerate(column_3_reasons):
     print(reason)
     Radiobutton(TourWin,text=reason,indicatoron=0,width=10,padx=10,value=reason,variable=column_3_var).grid(row=val+1,column=2)
 
-
 #Column 4 Objects
 Beh1Lbl = Label(TourWin,text="Beh 1 (SKBf)",justify=RIGHT)
 Beh1Lbl.grid(row=1,column=3)
@@ -97,27 +97,22 @@ beh4_field = IntVar()
 Beh4Entry = Entry(TourWin,textvariable=beh4_field,width=10)
 Beh4Entry.grid(row=4,column=4)
 
-#Listbox
-listbox = Listbox(TourWin,height=10,width=65)
-listbox.grid(row=7,columnspan=5)
 
 #Tree
-# tree = ttk.Treeview(TourWin)
-# tree["columns"] = ("one","two","three","four")
-# tree.column("one", width=100)
-# tree.column("two", width=100)
-# tree.column("three", width=100)
-# tree.column("four", width=100)
-# tree.heading("one", text="No.")
-# tree.heading("two", text="Tour")
-# tree.heading("three", text="Reason")
-# tree.heading("four", text="Number")
-# tree.grid(row=7,columnspan=5)
-# tree.insert("", 0, text="Details of added items:", values=("1","Tour 2","Ausfall Kfz","Rbeh 12:44"))
-
+tree = ttk.Treeview(TourWin, height=10,columns=('Late Duration','Reason','Number'),selectmode="extended")
+tree.heading('#0', text="Tour",anchor=W)
+tree.heading('#1', text="Late Duration",anchor=W)
+tree.heading('#2', text="Reason",anchor=W)
+tree.heading('#3', text="Number",anchor=W)
+tree.column('#0',stretch=YES,width=50)
+tree.column('#1',stretch=YES,width=50)
+tree.column('#2',stretch=YES,width=50)
+tree.column('#3',stretch=YES,width=50)
+tree.grid(row=7,columnspan=5,sticky='nsew')
+treeview=tree
 
 #Buttons
-AddBtn = Button(TourWin,text="Add",height=5,width=13)
+AddBtn = Button(TourWin,text="Add",height=5,width=13,command=lambda:add())
 AddBtn.grid(row=8,column=0)
 
 ClearBtn = Button(TourWin,text="Clear",height=5,width=13,command=lambda:clearFields())
@@ -145,6 +140,19 @@ def clearFields():
     late_duration.delete(0,'end')
     column_1_var.set("")
     column_3_var.set("")
+
+def add():
+    line["tour"] = column_1_var.get()
+    line["duration"] = late_duration.get()
+    line["reason"] = column_3_var.get()
+    line["number"] = "testing"
+    addedTour = line["tour"]
+    addedDuration = line["duration"]
+    addedReason = line["reason"]
+    addedNumber = line["number"]
+    tree.insert("",0,text=addedTour,values=(addedDuration,addedReason,addedNumber))
+
+
 
 TourWin.mainloop()
 
