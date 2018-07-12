@@ -147,9 +147,13 @@ def clearFields():
     column_3_var.set("")
 
 def add():
-    print(checkDurationField()," , ",checkNumbersField()," , ",checkRadiobtns())
+    # print(checkDurationField()," , ",checkAllNumbersField()," , ",checkRadiobtns())
+    # print("beh 1,",checkIndivisualField(beh1_field))
+    # print("beh 2,",checkIndivisualField(beh2_field))
+    # print("beh 3,",checkIndivisualField(beh3_field))
+    # print("beh 4,",checkIndivisualField(beh4_field))
     if checkDurationField():
-        if checkNumbersField():
+        if checkAllNumbersField() and checkIndivisualField(beh1_field) and checkIndivisualField(beh2_field) and checkIndivisualField(beh3_field) and checkIndivisualField(beh4_field):
             if checkRadiobtns():
                 found = getNumberFields()
                 line["tour"] = column_1_var.get()
@@ -175,8 +179,11 @@ def getNumberFields():
     allfields = [beh1_field.get(),beh2_field.get(),beh3_field.get(),beh4_field.get()]
     found = ""
     for i in range(4):
-        if allfields[i] != 0:
+        print(allfields[i].isdigit())
+        if allfields[i] != "" and allfields[i].isdigit():
             found+=column_5_text[i]+"="+str(allfields[i])+", "
+        else:
+            continue
     return found[:-2]
     
 def view():
@@ -212,19 +219,19 @@ def checkDurationField():
             return False
     return False
 
-def checkNumbersField():
-    if beh1_field.get() != "" and str(beh1_field.get()).isdigit():
-        if beh2_field.get() != "" and str(beh2_field.get()).isdigit():
-            if beh3_field.get() != "" and str(beh3_field.get()).isdigit():
-                if beh4_field.get() != "" and str(beh4_field.get()).isdigit():
-                    return True
-    return False
+def checkIndivisualField(entry):
+    return entry.get().isdigit()
+
+
+
+def checkAllNumbersField():
+    if beh1_field.get() == "" and beh2_field.get() == "" and beh3_field.get() == "" and beh4_field.get() == "":
+        return False
+    return True
 
 def checkRadiobtns():
     if str(column_1_var.get()) != "" and str(column_3_var.get()) != "":
         return True
     return False
-
-
 
 TourWin.mainloop()
