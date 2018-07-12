@@ -103,6 +103,7 @@ beh4_field = StringVar()
 Beh4Entry = Entry(TourWin,textvariable=beh4_field,width=10)
 Beh4Entry.grid(row=4,column=4)
 
+fields = [beh1_field,beh2_field,beh3_field,beh4_field]
 #Tree
 tree = ttk.Treeview(TourWin, height=10,columns=('Late Duration','Reason','Number','Date'),selectmode="extended")
 tree.heading('#0', text="Tour",anchor=W)
@@ -147,27 +148,25 @@ def clearFields():
     column_3_var.set("")
 
 def add():
-    # print(checkDurationField()," , ",checkAllNumbersField()," , ",checkRadiobtns())
-    # print("beh 1,",checkIndivisualField(beh1_field))
-    # print("beh 2,",checkIndivisualField(beh2_field))
-    # print("beh 3,",checkIndivisualField(beh3_field))
-    # print("beh 4,",checkIndivisualField(beh4_field))
     if checkDurationField():
-        if checkAllNumbersField() and checkIndivisualField(beh1_field) and checkIndivisualField(beh2_field) and checkIndivisualField(beh3_field) and checkIndivisualField(beh4_field):
+        if checkAllNumbersField():
             if checkRadiobtns():
                 found = getNumberFields()
                 line["tour"] = column_1_var.get()
                 line["duration"] = late_duration.get()
                 line["reason"] = column_3_var.get()
                 line["number"] = found
-                addedTour = line["tour"]
-                addedDuration = line["duration"]
-                addedReason = line["reason"]
-                addedNumber = line["number"]
-                addedTime = time()
-                cur.execute('''INSERT INTO data (tour,duration,reason,number,date) VALUES(?,?,?,?,?)''',(addedTour,addedDuration,addedReason,addedNumber,addedTime))
-                # conn.commit()
-                tree.insert("",0,text=addedTour,values=(addedDuration,addedReason,addedNumber,addedTime))
+                if found == "":
+                    messagebox.showerror("Error","Characters are not allowed.")
+                else:
+                    addedTour = line["tour"]
+                    addedDuration = line["duration"]
+                    addedReason = line["reason"]
+                    addedNumber = line["number"]
+                    addedTime = time()
+                    cur.execute('''INSERT INTO data (tour,duration,reason,number,date) VALUES(?,?,?,?,?)''',(addedTour,addedDuration,addedReason,addedNumber,addedTime))
+                    conn.commit()
+                    tree.insert("",0,text=addedTour,values=(addedDuration,addedReason,addedNumber,addedTime))
             else:
                 messagebox.showerror("Error","Please select atleast one button from each column")
         else:
@@ -180,10 +179,11 @@ def getNumberFields():
     found = ""
     for i in range(4):
         print(allfields[i].isdigit())
-        if allfields[i] != "" and allfields[i].isdigit():
+        if allfields[i] != "" and checkIndivisualField(fields[i]):
             found+=column_5_text[i]+"="+str(allfields[i])+", "
         else:
             continue
+    print(found)
     return found[:-2]
     
 def view():
@@ -221,8 +221,6 @@ def checkDurationField():
 
 def checkIndivisualField(entry):
     return entry.get().isdigit()
-
-
 
 def checkAllNumbersField():
     if beh1_field.get() == "" and beh2_field.get() == "" and beh3_field.get() == "" and beh4_field.get() == "":
