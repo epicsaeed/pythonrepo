@@ -3,9 +3,13 @@ from tkinter import messagebox, Label, Button,font,Tk,Radiobutton,RIGHT,IntVar,S
 import sqlite3
 from datetime import datetime
 
-conn = sqlite3.connect('tour.db')
+#initiates database connection
+path = 'tour.db'
+conn = sqlite3.connect(path)
 cur = conn.cursor()
 cur.execute('''CREATE TABLE IF NOT EXISTS data(tour TEXT, duration TEXT, reason TEXT, number TEXT, date TEXT)''')
+conn.commit()
+cur.execute('DELETE FROM data')
 conn.commit()
 
 #GLOBAL VARIABLES 
@@ -18,7 +22,7 @@ line = {"tour":tour,"duration":duration,"reason":reason,"number":number, "date":
 global counter
 counter = 0
 
-#window options
+#Window options
 TourWin = Tk()
 TourWin.title("Tour Number")
 TourWin.resizable(width=False, height=False)
@@ -65,6 +69,8 @@ late_var = StringVar()
 late_duration = Entry(TourWin,textvariable=late_var,width=10)
 late_duration.grid(row=1,column=1)
 
+exampleLbl = Label(TourWin,text="ex. 13:00",font=("Helvetica 15 italic")).grid(row=2,column=1)
+
 #Column 3 Objects
 column_3_reasons = ["verkehrsbedingt","Ausfall Kfz","zu spät vom BZ","zu spät vom PZ","sonstiges"]
 column_3_var = StringVar()
@@ -103,7 +109,9 @@ beh4_field = StringVar()
 Beh4Entry = Entry(TourWin,textvariable=beh4_field,width=10)
 Beh4Entry.grid(row=4,column=4)
 
+#puts all fields in a list
 fields = [beh1_field,beh2_field,beh3_field,beh4_field]
+
 #Tree
 tree = ttk.Treeview(TourWin, height=10,columns=('Late Duration','Reason','Number','Date'),selectmode="extended")
 tree.heading('#0', text="Tour",anchor=W)
@@ -123,20 +131,27 @@ treeview=tree
 AddBtn = Button(TourWin,text="Add",height=5,width=13,command=lambda:add())
 AddBtn.grid(row=8,column=0)
 
-ClearBtn = Button(TourWin,text="Clear",height=5,width=13,command=lambda:clearFields())
-ClearBtn.grid(row=8,column=1)
+clrFldBtn = Button(TourWin,text="Clear Fields",height=5,width=13,command=lambda:clearFields())
+clrFldBtn.grid(row=8,column=1)
 
-LoadBtn = Button(TourWin,text="Load",height=5,width=13,command=lambda:load())
-LoadBtn.grid(row=8,column=2)
+clrTreeBtn = Button(TourWin,text="Clear Tree",height=5,width=13,command=lambda:clearTree())
+clrTreeBtn.grid(row=8,column=2)
 
-Misc2Btn = Button(TourWin,text="Misc.",height=5,width=13)
+Misc2Btn = Button(TourWin,text="Export",height=5,width=13,command=lambda:export())
 Misc2Btn.grid(row=8,column=3)
 
-ExitBtn = Button(TourWin,text="Exit",height=5,width=13,command=lambda:TourWin.destroy())
+ExitBtn = Button(TourWin,text="Submit & Exit",height=5,width=13,command=lambda:TourWin.destroy())
 ExitBtn.grid(row=8,column=4)
 
 ############################################ HELPER FUNCTIONS ############################################
 
+def clearTree():
+    #clears the treeview + database
+    for i in tree.get_children():
+        tree.delete(i)
+    cur.execute('DELETE FROM data')
+    conn.commit()
+    
 def clearFields():
     #this functions recieves all checkboxes and text fields in the window and clears them
     beh1_field.set("")
@@ -148,6 +163,7 @@ def clearFields():
     column_3_var.set("")
 
 def add():
+    #reads radiobutton and fields and add elements to the list box and database
     if checkDurationField():
         if checkAllNumbersField():
             if checkRadiobtns():
@@ -156,6 +172,7 @@ def add():
                 line["duration"] = late_duration.get()
                 line["reason"] = column_3_var.get()
                 line["number"] = found
+                line["date"] = time()
                 if found == "":
                     messagebox.showerror("Error","Characters are not allowed.")
                 else:
@@ -163,7 +180,8 @@ def add():
                     addedDuration = line["duration"]
                     addedReason = line["reason"]
                     addedNumber = line["number"]
-                    addedTime = time()
+                    addedTime = line["date"]
+                    print(line)
                     cur.execute('''INSERT INTO data (tour,duration,reason,number,date) VALUES(?,?,?,?,?)''',(addedTour,addedDuration,addedReason,addedNumber,addedTime))
                     conn.commit()
                     tree.insert("",0,text=addedTour,values=(addedDuration,addedReason,addedNumber,addedTime))
@@ -175,6 +193,7 @@ def add():
         messagebox.showerror("Error","Please insert valid duration value. (00:00)")
 
 def getNumberFields():
+    #returns the non-empty values of the number column as a string
     allfields = [beh1_field.get(),beh2_field.get(),beh3_field.get(),beh4_field.get()]
     found = ""
     for i in range(4):
@@ -187,9 +206,10 @@ def getNumberFields():
     return found[:-2]
     
 def view():
+    #prints all items in the database
     conn.row_factory = dict_factory
     view = cur.execute('SELECT * FROM data').fetchall()
-    print(view)
+    return view
 
 def dict_factory(cursor,row):
     d = {}
@@ -198,18 +218,51 @@ def dict_factory(cursor,row):
     return d
 
 def load():
+    #loads data from database to listbox 
     conn.row_factory = dict_factory
     elements = cur.execute('SELECT * FROM data')
-    for row in elements:
-        tree.insert("",0,text=row[0],values=(row[1],row[2],row[3],row[4]))
-    messagebox.showinfo("Information","Database has been imported.")
+    database = elements.fetchone()
+    print(database)
+    if database is None:
+        messagebox.showinfo("Warning","Database is empty")
+    else:
+        for row in elements:
+            tree.insert("",0,text=row[0],values=(row[1],row[2],row[3],row[4]))
+        messagebox.showinfo("Information","Database has been imported.")
 
 def time():
+    #returns a timestamp
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+def export():
+    #exports the treeview list into a csv.file
+    import csv
+    exportedFile = "tour.csv"
+    data = view()
+    list = [[]]
+    for i in range(len(data)):
+        list = list + [[data[i][0],data[i][1],data[i][2],data[i][3]]]
+    with open(exportedFile,"w",newline = '') as output:
+        a = csv.writer(output,delimiter=',')
+        headline = [['Tour','Late Duration','Reason','Number'],]
+        a.writerows(headline)
+        del list[0]
+        a.writerows(list)
+        runFile("tour.csv")
+
+def runFile(filename):
+    #opens the exported file
+    import os,subprocess
+    try:
+        os.startfile(filename)
+    except AttributeError:
+        subprocess.call(['open', filename])
+
+
 ############################################### ERROR CHECKING FUNCTIONS ###############################################
+
 def checkDurationField():
-    #checks if duration field of the format 00:00.
+    #checks if duration field of the format 00:00
     time = str(late_var.get())
     if len(time) == 5:
         try:
@@ -220,14 +273,17 @@ def checkDurationField():
     return False
 
 def checkIndivisualField(entry):
+    #returs true if the passed field is a digit
     return entry.get().isdigit()
 
 def checkAllNumbersField():
+    #returns False if all numbers fields are empty
     if beh1_field.get() == "" and beh2_field.get() == "" and beh3_field.get() == "" and beh4_field.get() == "":
         return False
     return True
 
 def checkRadiobtns():
+    #returns False is neither radiobuttons are selected
     if str(column_1_var.get()) != "" and str(column_3_var.get()) != "":
         return True
     return False

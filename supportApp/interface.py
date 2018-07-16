@@ -1,7 +1,6 @@
 #imports tkinter methods
 from tkinter import Tk,Button
 
-
 #creates window object
 window = Tk()
 window.title("SUPPORT APPLICATION")
@@ -27,4 +26,3 @@ ExitBtn = Button(window, text="Exit",width=20,height=5,command=lambda:exit())
 ExitBtn.grid(row=2,column=1)
 
 window.mainloop()
-
