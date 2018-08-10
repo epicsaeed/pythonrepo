@@ -27,6 +27,7 @@ class TourWindow(Frame):
         self.setColumn4()
         self.setTree()
         self.setButtons()
+        self.setWrongDelivery()
         
     def setDatabase(self):
         self.connection = sqlite3.connect('tour.db')
@@ -147,6 +148,22 @@ class TourWindow(Frame):
         ExitBtn = Button(self.frame,text="Submit & Exit",height=5,width=13,command=lambda:exit())
         ExitBtn.grid(row=8,column=4)
 
+    def setWrongDelivery(self):
+        #set labels
+        FehlLbl = Label(self.frame, text="Fehlerhafte Zuführung",font=("Helvetica",16))
+        FehlLbl.grid(row=9,column=0,columnspan=8)
+        FehlLbl.config(width=20)
+        FehlLblFont = font.Font(FehlLbl,FehlLbl.cget("font"))
+        FehlLblFont.configure(underline=True)
+        FehlLbl.configure(font=FehlLblFont)
+        row = 12
+        self.setTableLabels(row)
+        self.setTableOneTextFields(row)
+        
+
+
+
+
 ############################################### HELPER FUNCTIONS #######################################################
     def clearTree(self):
         #clears the treeview + database
@@ -226,10 +243,11 @@ class TourWindow(Frame):
         data = self.view()
         list = [[]]
         for i in range(len(data)):
-            list = list + [[data[i][0],data[i][1],data[i][2],data[i][3]]]
+            list = list + [[data[i][0],data[i][1],data[i][2],data[i][3],data[i][4]]]
+            print(list)
         with open(exportedFile,"w",newline='') as output:
             a = csv.writer(output,delimiter=',')
-            headline = [['Tour','Late Duration','Reason','Number'],]
+            headline = [['Tour','Late Duration','Reason','Number','Date Created'],]
             a.writerows(headline)
             del list[0]
             a.writerows(list)
@@ -242,6 +260,129 @@ class TourWindow(Frame):
             os.startfile(filename)
         except AttributeError:
             subprocess.call(['open', filename])
+
+    def setTableLabels(self,row):
+        Label(self.frame, text="falsche Infoträger").grid(row=row-2,column=0,columnspan=8)
+        Label(self.frame, text="E+1").grid(row=row-1,column=2)
+        Label(self.frame, text="E+2/4").grid(row=row-1,column=6)
+
+        #set headers
+        header_text = ["Beh 1 (SKBf)","Beh 2 (GMBF)","Beh 3 MBf"]
+        for i in range(3):
+            Label(self.frame, text=header_text[i]).grid(row=row,column=i+1)
+        for i in range(3):
+            Label(self.frame, text=header_text[i]).grid(row=row,column=i+5)
+
+        #set row labels
+        row_text = ["Laufzeit","eingehalten","verzögert","unbekannt","für PLZ, ZSP"]
+        #row+=1
+        count = row
+        for labels in row_text:
+            Label(self.frame,text=labels).grid(column=0,row=count)
+            count+=1
+
+    def setTableOneTextFields(self,row):
+        #set text fields
+        self.r13c1Var = StringVar()
+        self.r13c1Entry = Entry(self.frame,textvariable=self.r13c1Var,width=10)
+        self.r13c1Entry.grid(row=row+1,column=1)
+
+        self.r14c1Var = StringVar()
+        self.r14c1Entry = Entry(self.frame,textvariable=self.r14c1Var,width=10)
+        self.r14c1Entry.grid(row=row+2,column=1)
+
+        self.r15c1Var = StringVar()
+        self.r15c1Entry = Entry(self.frame,textvariable=self.r15c1Var,width=10)
+        self.r15c1Entry.grid(row=row+3,column=1)
+
+        self.r16c1Var = StringVar()
+        self.r16c1Entry = Entry(self.frame,textvariable=self.r16c1Var,width=10)
+        self.r16c1Entry.grid(row=row+4,column=1)
+
+        self.r13c2Var = StringVar()
+        self.r13c2Entry = Entry(self.frame,textvariable=self.r13c2Var,width=10)
+        self.r13c2Entry.grid(row=row+1,column=2)
+
+        self.r14c2Var = StringVar()
+        self.r14c2Entry = Entry(self.frame,textvariable=self.r14c2Var,width=10)
+        self.r14c2Entry.grid(row=row+2,column=2)
+
+        self.r15c2Var = StringVar()
+        self.r15c2Entry = Entry(self.frame,textvariable=self.r15c2Var,width=10)
+        self.r15c2Entry.grid(row=row+3,column=2)
+
+        self.r16c2Var = StringVar()
+        self.r16c2Entry = Entry(self.frame,textvariable=self.r16c2Var,width=10)
+        self.r16c2Entry.grid(row=row+4,column=2)
+
+        self.r13c3Var = StringVar()
+        self.r13c3Entry = Entry(self.frame,textvariable=self.r13c3Var,width=10)
+        self.r13c3Entry.grid(row=row+1,column=3)
+
+        self.r14c3Var = StringVar()
+        self.r14c3Entry = Entry(self.frame,textvariable=self.r14c3Var,width=10)
+        self.r14c3Entry.grid(row=row+2,column=3)
+
+        self.r15c3Var = StringVar()
+        self.r15c3Entry = Entry(self.frame,textvariable=self.r15c3Var,width=10)
+        self.r15c3Entry.grid(row=row+3,column=3)
+
+        self.r16c3Var = StringVar()
+        self.r16c3Entry = Entry(self.frame,textvariable=self.r16c3Var,width=10)
+        self.r16c3Entry.grid(row=row+4,column=3)
+
+        self.r13c5Var = StringVar()
+        self.r13c5Entry = Entry(self.frame,textvariable=self.r13c5Var,width=10)
+        self.r13c5Entry.grid(row=row+1,column=5)
+
+        self.r14c5Var = StringVar()
+        self.r14c5Entry = Entry(self.frame,textvariable=self.r14c5Var,width=10)
+        self.r14c5Entry.grid(row=row+2,column=5)
+
+        self.r15c5Var = StringVar()
+        self.r15c5Entry = Entry(self.frame,textvariable=self.r15c5Var,width=10)
+        self.r15c5Entry.grid(row=row+3,column=5)
+
+        self.r16c5Var = StringVar()
+        self.r16c5Entry = Entry(self.frame,textvariable=self.r16c5Var,width=10)
+        self.r16c5Entry.grid(row=row+4,column=5)
+
+        self.r13c6Var = StringVar()
+        self.r13c6Entry = Entry(self.frame,textvariable=self.r13c6Var,width=10)
+        self.r13c6Entry.grid(row=row+1,column=6)
+
+        self.r14c6Var = StringVar()
+        self.r14c6Entry = Entry(self.frame,textvariable=self.r14c6Var,width=10)
+        self.r14c6Entry.grid(row=row+2,column=6)
+
+        self.r15c6Var = StringVar()
+        self.r15c6Entry = Entry(self.frame,textvariable=self.r15c6Var,width=10)
+        self.r15c6Entry.grid(row=row+3,column=6)
+
+        self.r16c6Var = StringVar()
+        self.r16c6Entry = Entry(self.frame,textvariable=self.r16c6Var,width=10)
+        self.r16c6Entry.grid(row=row+4,column=6)
+
+        self.r13c7Var = StringVar()
+        self.r13c7Entry = Entry(self.frame,textvariable=self.r13c7Var,width=10)
+        self.r13c7Entry.grid(row=row+1,column=7)
+
+        self.r14c7Var = StringVar()
+        self.r14c7Entry = Entry(self.frame,textvariable=self.r14c7Var,width=10)
+        self.r14c7Entry.grid(row=row+2,column=7)
+
+        self.r15c7Var = StringVar()
+        self.r15c7Entry = Entry(self.frame,textvariable=self.r15c7Var,width=10)
+        self.r15c7Entry.grid(row=row+3,column=7)
+
+        self.r16c7Var = StringVar()
+        self.r16c7Entry = Entry(self.frame,textvariable=self.r16c7Var,width=10)
+        self.r16c7Entry.grid(row=row+4,column=7)
+
+
+
+
+
 
     @staticmethod
     def time():
@@ -277,10 +418,11 @@ class TourWindow(Frame):
             return True
         return False
 
-# def main():
-#     root2 = Tk()
-#     app = TourWindow(root2)
-#     root2.mainloop()
+def main():
+    root = Tk()
+    app = TourWindow(root)
+    root.mainloop()
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
+
